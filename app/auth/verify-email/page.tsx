@@ -45,13 +45,13 @@ function VerifyEmailForm() {
   // Loading state
   if (isLoading && isValidToken) {
     return (
-      <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+      <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md ring-1 ring-gray-200/50 dark:ring-gray-700/50">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
             <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
           </div>
-          <CardTitle className="text-2xl font-bold">Verifying your email...</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Verifying your email...</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             Please wait while we verify your email address.
           </CardDescription>
         </CardHeader>
@@ -62,22 +62,22 @@ function VerifyEmailForm() {
   // Invalid token state
   if (!isValidToken) {
     return (
-      <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+      <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md ring-1 ring-gray-200/50 dark:ring-gray-700/50">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
             <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
-          <CardTitle className="text-2xl font-bold">Invalid verification link</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Invalid verification link</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             This email verification link is invalid or has expired.
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             If you need to verify your email, please request a new verification link.
           </p>
           {email && (
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Email: {email}
             </p>
           )}
@@ -87,7 +87,7 @@ function VerifyEmailForm() {
             <Button
               onClick={handleResendEmail}
               disabled={isResending}
-              className="w-full"
+              className="w-full bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-gray-200 text-white dark:text-gray-900 font-medium"
             >
               {isResending ? (
                 <>
@@ -103,7 +103,7 @@ function VerifyEmailForm() {
             </Button>
           )}
           <Link href="/auth/login" className="w-full">
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full border-gray-200 dark:border-gray-700 text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
               Back to login
             </Button>
           </Link>
@@ -115,29 +115,29 @@ function VerifyEmailForm() {
   // Success state
   if (isVerified) {
     return (
-      <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+      <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md ring-1 ring-gray-200/50 dark:ring-gray-700/50">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
             <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <CardTitle className="text-2xl font-bold">Email verified!</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Email verified!</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             Your email address has been successfully verified. You can now access all features of TaskiSpace.
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Welcome to TaskiSpace! You&apos;re all set to start organizing your tasks and managing your workspaces.
           </p>
           {email && (
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mt-2">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mt-2">
               Verified: {email}
             </p>
           )}
         </CardContent>
         <CardFooter>
           <Link href="/auth/login" className="w-full">
-            <Button className="w-full">Continue to TaskiSpace</Button>
+            <Button className="w-full bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-gray-200 text-white dark:text-gray-900 font-medium">Continue to TaskiSpace</Button>
           </Link>
         </CardFooter>
       </Card>
@@ -146,22 +146,22 @@ function VerifyEmailForm() {
 
   // Error state
   return (
-    <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+    <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md ring-1 ring-gray-200/50 dark:ring-gray-700/50">
       <CardHeader className="space-y-1 text-center">
         <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
         </div>
-        <CardTitle className="text-2xl font-bold">Verification failed</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Verification failed</CardTitle>
+        <CardDescription className="text-gray-600 dark:text-gray-400">
           We encountered an error while verifying your email address.
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center">
-        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Please try clicking the verification link again, or request a new one.
         </p>
         {email && (
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Email: {email}
           </p>
         )}
@@ -171,7 +171,7 @@ function VerifyEmailForm() {
           <Button
             onClick={handleResendEmail}
             disabled={isResending}
-            className="w-full"
+            className="w-full bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-gray-200 text-white dark:text-gray-900 font-medium"
           >
             {isResending ? (
               <>
@@ -187,7 +187,7 @@ function VerifyEmailForm() {
           </Button>
         )}
         <Link href="/auth/login" className="w-full">
-          <Button variant="outline" className="w-full">
+          <Button variant="outline" className="w-full border-gray-200 dark:border-gray-700 text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
             Back to login
           </Button>
         </Link>
@@ -199,9 +199,9 @@ function VerifyEmailForm() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm">
+      <Card className="w-full shadow-xl border-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md ring-1 ring-gray-200/50 dark:ring-gray-700/50">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Loading...</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Loading...</CardTitle>
         </CardHeader>
       </Card>
     }>
