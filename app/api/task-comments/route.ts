@@ -127,10 +127,11 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (listError || !list) {
+      console.log('POST /api/task-comments - List access denied:', { list_id: task.list_id, listError })
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const isOwner = (list.workspaces as { owner_id: string }[])[0]?.owner_id === user.id
+    const isOwner = (list.workspaces as { owner_id?: string })?.owner_id === user.id
 
     if (!isOwner) {
       const { data: collaborator } = await supabase
@@ -141,6 +142,7 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (!collaborator) {
+        console.log('POST /api/task-comments - Collaborator access denied:', { task_id, user_id: user.id })
         return NextResponse.json({ error: 'Access denied' }, { status: 403 })
       }
     }

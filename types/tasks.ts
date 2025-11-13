@@ -88,6 +88,7 @@ export interface TaskActivity {
 export interface TaskTag {
   task_id: string
   tag_id: string
+  task_tag_id: string
   created_at: string
   updated_at: string
 }
@@ -153,7 +154,7 @@ export interface CreateSubtaskData {
 }
 
 export interface TaskTagWithTag {
-  id: string
+  task_tag_id: string
   task_id: string
   tag_id: string
   created_at: string
@@ -263,7 +264,7 @@ export type TaskActivityType =
   | 'comment_reply_added'
   | 'comment_edited'
   | 'comment_deleted'
-  | 'subtask_created'
+  | 'subtask_added'
   | 'subtask_completed'
   | 'subtask_updated'
   | 'subtask_deleted'

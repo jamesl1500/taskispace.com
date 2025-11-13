@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
         color: taskTag.tags.color,
         workspace_id: taskTag.tags.workspace_id,
         created_at: taskTag.tags.created_at,
-        task_tag_id: taskTag.id,
+        task_tag_id: taskTag.task_tag_id,
         assigned_at: taskTag.created_at
       }))
 
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to fetch workspace tags' }, { status: 500 })
       }
 
-      console.log('GET /api/task-tags: Successfully fetched workspace tags', { workspace_id, tagCount: (tags || []).length })
+      console.log('GET /api/task-tags: Successfully fetched workspace tags', { workspace_id, tagCount: (tags || []).length, tags: tags })
       return NextResponse.json(tags || [])
     }
 
@@ -166,8 +166,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const workspaceId = (list.workspaces as { owner_id: string }[])[0] && list.workspace_id
-    const isOwner = (list.workspaces as { owner_id: string }[])[0]?.owner_id === user.id
+    const workspaceId = (list.workspaces as { owner_id?: string }) && list.workspace_id
+    const isOwner = (list.workspaces as { owner_id?: string })?.owner_id === user.id
 
     if (!isOwner) {
       const { data: collaborator } = await supabase

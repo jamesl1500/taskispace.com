@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, X, Tag } from 'lucide-react'
-import { tagsApi } from '@/lib/api/taskManagement'
+import { useTaskTags, useWorkspaceTags, useAddTaskTag, useRemoveTaskTag } from '@/hooks/queries/useTaskManagementQueries'
 
 interface Tag {
   id: string
@@ -37,9 +37,6 @@ const TAG_COLORS = [
 ]
 
 export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
-  const [taskTags, setTaskTags] = useState<Tag[]>([])
-  const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([])
-  const [loading, setLoading] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isCreateNewTag, setIsCreateNewTag] = useState(false)
   
@@ -49,49 +46,34 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
     newTagColor: TAG_COLORS[0].value
   })
 
-  const loadTags = useCallback(async () => {
-    try {
-      setLoading(true)
-      const [taskTagsData, workspaceTagsData] = await Promise.all([
-        tagsApi.getByTaskId(taskId),
-        tagsApi.getByWorkspaceId(workspaceId)
-      ])
-      
-      setTaskTags(taskTagsData)
-      setWorkspaceTags(workspaceTagsData)
-    } catch (error) {
-      console.error('Failed to load tags:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [taskId, workspaceId])
+  // React Query hooks
+  const { data: taskTags = [], isLoading: tagsLoading } = useTaskTags(taskId)
+  const { data: workspaceTags = [], isLoading: workspaceTagsLoading } = useWorkspaceTags(workspaceId)
+  const addTagMutation = useAddTaskTag()
+  const removeTagMutation = useRemoveTaskTag()
 
-  useEffect(() => {
-    loadTags()
-  }, [loadTags])
+  const loading = tagsLoading || workspaceTagsLoading
 
   const handleAddTag = async () => {
     try {
-      let tagData
-      
       if (isCreateNewTag) {
         if (!addForm.newTagName.trim()) return
         
-        tagData = await tagsApi.addToTask({
-          task_id: taskId,
-          tag_name: addForm.newTagName,
-          tag_color: addForm.newTagColor
+        await addTagMutation.mutateAsync({
+          taskId,
+          tagName: addForm.newTagName,
+          tagColor: addForm.newTagColor
         })
       } else {
         if (!addForm.selectedTagId) return
         
-        tagData = await tagsApi.addToTask({
-          task_id: taskId,
-          tag_id: addForm.selectedTagId
+        await addTagMutation.mutateAsync({
+          taskId,
+          tagId: addForm.selectedTagId
         })
       }
       
-      setTaskTags(prev => [...prev, tagData])
+      // Reset form and close dialog
       setAddForm({
         selectedTagId: '',
         newTagName: '',
@@ -99,12 +81,6 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
       })
       setIsCreateNewTag(false)
       setIsAddDialogOpen(false)
-      
-      // Refresh workspace tags in case we created a new one
-      if (isCreateNewTag) {
-        const updatedWorkspaceTags = await tagsApi.getByWorkspaceId(workspaceId)
-        setWorkspaceTags(updatedWorkspaceTags)
-      }
     } catch (error) {
       console.error('Failed to add tag:', error)
       alert('Failed to add tag. Please try again.')
@@ -112,11 +88,13 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
   }
 
   const handleRemoveTag = async (tag: Tag) => {
-    if (!tag.task_tag_id) return
+    if (!tag.task_tag_id) {
+      console.error('No task_tag_id found for tag:', tag)
+      return
+    }
 
     try {
-      await tagsApi.removeFromTask(tag.task_tag_id)
-      setTaskTags(prev => prev.filter(t => t.id !== tag.id))
+      await removeTagMutation.mutateAsync(tag.task_tag_id)
     } catch (error) {
       console.error('Failed to remove tag:', error)
       alert('Failed to remove tag. Please try again.')
@@ -124,7 +102,12 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
   }
 
   const availableTags = workspaceTags.filter(
-    workspaceTag => !taskTags.some(taskTag => taskTag.id === workspaceTag.id)
+    (workspaceTag: Tag) => {
+      const isAlreadyAssigned = taskTags.some((taskTag: Tag) => 
+        taskTag.id === workspaceTag.id || taskTag.name === workspaceTag.name
+      )
+      return !isAlreadyAssigned
+    }
   )
 
   if (loading) {
@@ -154,6 +137,7 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
             size="sm" 
             variant="outline"
             onClick={() => setIsAddDialogOpen(true)}
+            disabled={addTagMutation.isPending}
           >
             <Plus className="h-4 w-4 mr-1" />
             Add Tag
@@ -173,15 +157,16 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
                 size="sm" 
                 className="mt-2"
                 onClick={() => setIsAddDialogOpen(true)}
+                disabled={addTagMutation.isPending}
               >
                 Add the first tag
               </Button>
             )}
           </div>
         ) : (
-          taskTags.map((tag) => (
+          taskTags.map((tag: Tag) => (
             <Badge
-              key={tag.id}
+              key={tag.task_tag_id || tag.id}
               className="flex items-center gap-1 pr-1"
               style={{ 
                 backgroundColor: `${tag.color}20`, 
@@ -193,7 +178,8 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
               {canEdit && (
                 <button
                   onClick={() => handleRemoveTag(tag)}
-                  className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+                  disabled={removeTagMutation.isPending}
+                  className="ml-1 hover:bg-black/10 rounded-full p-0.5 disabled:opacity-50"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -299,7 +285,7 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
                         <SelectValue placeholder="Choose a tag..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableTags.map((tag) => (
+                        {availableTags.map((tag: Tag) => (
                           <SelectItem key={tag.id} value={tag.id}>
                             <div className="flex items-center gap-2">
                               <div 
@@ -316,7 +302,7 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
                 ) : (
                   <div className="text-center py-4 text-gray-500">
                     <p>No available tags.</p>
-                    <p className="text-sm">Create a new tag or all workspace tags are already added.</p>
+                    <p className="text-sm">Create a new tag</p>
                   </div>
                 )}
               </>
@@ -338,12 +324,14 @@ export default function Tags({ taskId, workspaceId, canEdit }: TagsProps) {
             <Button 
               onClick={handleAddTag} 
               disabled={
-                isCreateNewTag 
+                addTagMutation.isPending ||
+                (isCreateNewTag 
                   ? !addForm.newTagName.trim()
                   : !addForm.selectedTagId && availableTags.length > 0
+                )
               }
             >
-              Add Tag
+              {addTagMutation.isPending ? 'Adding...' : 'Add Tag'}
             </Button>
           </DialogFooter>
         </DialogContent>

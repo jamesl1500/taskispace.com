@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const commentId = params.id
+    const { id: commentId } = await params
 
     // Get the comment
     const { data: comment, error: commentError } = await supabase
@@ -80,7 +80,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const commentId = params.id
+    const { id: commentId } = await params
     const { content } = await request.json()
 
     if (!content) {
@@ -170,7 +170,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const commentId = params.id
+    const { id: commentId } = await params
 
     // Get the comment to delete
     const { data: existingComment, error: commentError } = await supabase

@@ -15,13 +15,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const taskTagId = params.id
+    const { id: taskTagId } = await params
 
     // Get the task tag to delete
     const { data: existingTaskTag, error: taskTagError } = await supabase
       .from('task_tags')
       .select('*, tasks!inner(list_id), tags!inner(name, color)')
-      .eq('id', taskTagId)
+      .eq('task_tag_id', taskTagId)
       .single()
 
     if (taskTagError || !existingTaskTag) {
@@ -40,7 +40,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const isOwner = (list.workspaces as { owner_id: string }[])[0]?.owner_id === user.id
+    const isOwner = (list.workspaces as { owner_id?: string })?.owner_id === user.id
 
     if (!isOwner) {
       const { data: collaborator } = await supabase
@@ -59,7 +59,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { error } = await supabase
       .from('task_tags')
       .delete()
-      .eq('id', taskTagId)
+      .eq('task_tag_id', taskTagId)
 
     if (error) {
       console.error('Database error:', error)

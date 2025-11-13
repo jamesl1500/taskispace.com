@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import UserName from '@/components/user/UserName'
 import { MessageCircle, Reply, Edit, Trash2, Send } from 'lucide-react'
+import { useAuth } from '@/hooks/queries/useAuthQueries'
+import UserAvatar from '../user/UserAvatar'
 
 interface CommentsProps {
   taskId: string
@@ -33,6 +35,7 @@ export default function Comments({ taskId, canComment }: CommentsProps) {
   const [replyText, setReplyText] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
+  const { user } = useAuth()
 
   // React Query hooks
   const { 
@@ -143,10 +146,13 @@ export default function Comments({ taskId, canComment }: CommentsProps) {
     const isEditing = editingId === comment.id
     const isReplying = replyToId === comment.id
 
+    const canEdit = comment.author === user?.id
+
     return (
       <div key={comment.id} className={`${level > 0 ? 'ml-8 border-l border-slate-200 dark:border-slate-700 pl-4' : ''}`}>
         <div className="flex space-x-3 mb-4">
           <Avatar className="h-8 w-8">
+            <UserAvatar userId={comment.author} size={32} /> 
             <AvatarFallback>
               {comment.author.slice(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -204,16 +210,18 @@ export default function Comments({ taskId, canComment }: CommentsProps) {
                       <Reply className="h-3 w-3 mr-1" />
                       Reply
                     </Button>
-                    
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => startEdit(comment)}
-                      className="h-6 px-2"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
+
+                    {canEdit && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => startEdit(comment)}
+                        className="h-6 px-2"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    )}
                     
                     <Button
                       size="sm"

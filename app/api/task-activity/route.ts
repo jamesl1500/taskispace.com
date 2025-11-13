@@ -63,28 +63,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query
-    let query = supabase
+    const query = supabase
       .from('task_activity')
       .select('*')
       .eq('task_id', task_id)
 
-    // Filter by activity type if provided
-    if (activity_type) {
-      query = query.eq('type', activity_type)
-    }
+    
 
-    // Apply pagination
-    if (limit) {
-      query = query.limit(parseInt(limit))
-    }
-    if (offset) {
-      const offsetNum = parseInt(offset)
-      const limitNum = limit ? parseInt(limit) : 50
-      query = query.range(offsetNum, offsetNum + limitNum - 1)
-    }
-
+    // Execute query
     const { data: activities, error } = await query
       .order('created_at', { ascending: false })
+    
+    console.log('GET task-activity: Fetched activities', { task_id, activities, error })
 
     if (error) {
       console.error('Database error:', error)
