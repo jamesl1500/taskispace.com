@@ -217,7 +217,6 @@ export default function Activity({ taskId }: ActivityProps) {
                             </div>
                         </div>
                         
-                        {/* Additional Details */}
                         {activity.payload && typeof activity.payload === 'object' && 'description' in activity.payload && activity.payload.description && (
                           <p className="text-sm text-gray-600 mt-2 ml-8">
                             {String(activity.payload.description)}

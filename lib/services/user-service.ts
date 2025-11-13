@@ -46,7 +46,7 @@ export class UserService {
      * @returns The updated user data
      */
     async updateUserProfile(userId: string, profileData: Partial<{ name: string; avatar_url: string }>) {
-        const supabase = createClient()
+        const supabase = await this.getSupabaseClient()
         const { data, error } = await supabase
             .from('users')
             .update(profileData)
@@ -68,7 +68,7 @@ export class UserService {
      * @returns The deleted user data
      */
     async deleteUser(userId: string) {
-        const supabase = createClient()
+        const supabase = await this.getSupabaseClient()
         const { data, error } = await supabase
             .from('users')
             .delete()
