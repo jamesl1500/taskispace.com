@@ -6,11 +6,14 @@
  * Workspace interface
  */
 export interface Workspace {
-  id: string
+  id?: string
   name: string
   color: string
   description?: string | null
-  owner: string
+  owner_id: string
+  icon?: string
+  tasks?: string[]
+  member_count?: number
   created_at: string
   updated_at: string
 }
@@ -42,4 +45,6 @@ export interface UpdateWorkspaceData {
   name?: string
   color?: string
   description?: string | null
+  icon?: string
+  owner_id?: string
 }

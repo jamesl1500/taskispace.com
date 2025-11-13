@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { CreateWorkspaceData, UpdateWorkspaceData, Workspace } from '@/types/workspaces'
+import { CreateWorkspaceData } from '@/types/workspaces'
 import { WorkspaceService } from '@/lib/services/workspace-service'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const ws = new WorkspaceService()
     const supabase = await ws['getSupabaseClient']()

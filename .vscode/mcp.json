@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"my-mcp-server-fb2c230c": {
+			"url": "http://127.0.0.1:54321/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

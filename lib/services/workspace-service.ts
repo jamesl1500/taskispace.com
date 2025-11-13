@@ -126,7 +126,7 @@ export class WorkspaceService {
      * @param workspaceId - ID of the workspace to delete
      * @returns A promise that resolves when the workspace is deleted
      */
-    async deleteWorkspace(userId: string, workspaceId: string): Promise<void> {
+    async deleteWorkspace(userId: string, workspaceId: string): Promise<boolean> {
         const supabase = await this.getSupabaseClient()
         const { error } = await supabase
             .from('workspaces')
@@ -137,5 +137,7 @@ export class WorkspaceService {
         if (error) {
             throw new Error(`Failed to delete workspace: ${error.message}`)
         }
+
+        return true;
     }
 }

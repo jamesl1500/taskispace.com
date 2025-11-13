@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -34,16 +34,17 @@ export default function WorkspacesPage() {
     name: '',
     description: '',
     color: '#3b82f6',
+    owner_id: user ? user.id : '',
   })
-  const [editForm, setEditForm] = useState<UpdateWorkspaceData>({})
+  const [editForm, setEditForm] = useState<UpdateWorkspaceData>({
+    id: '',
+    name: '',
+    description: '',
+    color: '#3b82f6',
+    icon: 'folder',
+  })
 
-  useEffect(() => {
-    if (user) {
-      loadWorkspaces()
-    }
-  }, [user, filters])
-
-  const loadWorkspaces = async () => {
+  const loadWorkspaces = useCallback(async () => {
     setIsLoading(true)
     try {
       // Use service to fetch workspaces with filters
@@ -82,7 +83,13 @@ export default function WorkspacesPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [filters])
+
+    useEffect(() => {
+    if (user) {
+      loadWorkspaces()
+    }
+  }, [user, filters, loadWorkspaces])
 
   if (loading) {
     return (
@@ -142,7 +149,7 @@ export default function WorkspacesPage() {
       }
 
       setWorkspaces(prev => [...prev, newWorkspace])
-      setCreateForm({ name: '', description: '', color: '#3b82f6' })
+      setCreateForm({ name: '', description: '', color: '#3b82f6', owner_id: user!.id })
       setIsCreateModalOpen(false)
     } catch (error) {
       console.error('Failed to create workspace:', error)
@@ -174,7 +181,7 @@ export default function WorkspacesPage() {
 
       setWorkspaces(prev => prev.map(w => w.id === editingWorkspace.id ? updatedWorkspace : w))
       setEditingWorkspace(null)
-      setEditForm({})
+      setEditForm({ id: '', name: '', description: '', color: '#3b82f6', icon: 'folder' })
       setIsEditModalOpen(false)
     } catch (error) {
       console.error('Failed to update workspace:', error)
@@ -203,10 +210,12 @@ export default function WorkspacesPage() {
   const openEditModal = (workspace: Workspace) => {
     setEditingWorkspace(workspace)
     setEditForm({
+      id: workspace.id || '',
       name: workspace.name,
       description: workspace.description,
       color: workspace.color,
-      icon: workspace.icon
+      icon: workspace.icon || '',
+      owner_id: workspace.owner_id || ''
     })
     setIsEditModalOpen(true)
   }
@@ -252,7 +261,7 @@ export default function WorkspacesPage() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
-                    value={createForm.description}
+                    value={createForm.description || ''}
                     onChange={(e) => setCreateForm(prev => ({...prev, description: e.target.value}))}
                     placeholder="Describe your workspace"
                     rows={3}
@@ -302,7 +311,7 @@ export default function WorkspacesPage() {
               value={`${filters.sortBy}-${filters.sortOrder}`}
               onValueChange={(value) => {
                 const [sortBy, sortOrder] = value.split('-')
-                setFilters(prev => ({...prev, sortBy: sortBy as any, sortOrder: sortOrder as any}))
+                setFilters(prev => ({...prev, sortBy: sortBy as WorkspaceFilters['sortBy'], sortOrder: sortOrder as WorkspaceFilters['sortOrder']}))
               }}
             >
               <SelectTrigger className="w-48">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,12 +24,14 @@ import {
   Calendar,
   User,
   List as ListIcon,
-  Users
+  Users,
+  Eye
 } from 'lucide-react'
 import Link from 'next/link'
 import { Workspace } from '@/types/workspaces'
 import { List, ListMember, CreateListData } from '@/types/lists'
 import { Task, TaskStatus, TaskPriority, CreateTaskData, UpdateTaskData } from '@/types/tasks'
+import TaskSidePanel from '@/components/tasks/TaskSidePanel'
 
 export default function WorkspaceDetailPage() {
   const params = useParams()
@@ -50,7 +52,9 @@ export default function WorkspaceDetailPage() {
   const [isCreateListDialogOpen, setIsCreateListDialogOpen] = useState(false)
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false)
   const [isEditTaskDialogOpen, setIsEditTaskDialogOpen] = useState(false)
+  const [isTaskSidePanelOpen, setIsTaskSidePanelOpen] = useState(false)
 
+  const [viewingTask, setViewingTask] = useState<Task | null>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   
   // Form States
@@ -66,10 +70,8 @@ export default function WorkspaceDetailPage() {
     description: '',
     status: TaskStatus.TODO,
     priority: TaskPriority.MEDIUM,
-    workspace_id: params.id as string,
     list_id: '',
-    due_date: '',
-    tags: []
+    due_date: ''
   })
   
   const [editTaskForm, setEditTaskForm] = useState<UpdateTaskData>({})
@@ -193,10 +195,8 @@ export default function WorkspaceDetailPage() {
         description: '',
         status: TaskStatus.TODO,
         priority: TaskPriority.MEDIUM,
-        workspace_id: params.id as string,
         list_id: '',
-        due_date: '',
-        tags: []
+        due_date: ''
       })
     } catch (error) {
       console.error('Error creating task:', error)
@@ -279,9 +279,8 @@ export default function WorkspaceDetailPage() {
       title: task.title,
       description: task.description,
       priority: task.priority,
-      assignee_id: task.assignee_id,
-      due_date: task.due_date,
-      tags: task.tags
+      assignee: task.assignee,
+      due_date: task.due_date
     })
     setIsEditTaskDialogOpen(true)
   }
@@ -289,6 +288,16 @@ export default function WorkspaceDetailPage() {
   const openCreateTaskDialog = (listId: string) => {
     setCreateTaskForm(prev => ({ ...prev, list_id: listId }))
     setIsCreateTaskDialogOpen(true)
+  }
+
+  const openViewTaskDialog = (task: Task) => {
+    setViewingTask(task)
+    setIsTaskSidePanelOpen(true)
+  }
+
+  const closeTaskSidePanel = () => {
+    setIsTaskSidePanelOpen(false)
+    setViewingTask(null)
   }
 
   if (loading) {
@@ -333,9 +342,12 @@ export default function WorkspaceDetailPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex h-screen overflow-hidden">
+      {/* Main Content */}
+      <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>
+        <div className="container mx-auto p-6 h-full overflow-y-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
           <Link href="/workspaces">
             <Button variant="ghost" size="sm">
@@ -460,7 +472,7 @@ export default function WorkspaceDetailPage() {
                                   {new Date(task.due_date).toLocaleDateString()}
                                 </Badge>
                               )}
-                              {task.assignee_id && (
+                              {task.assignee && (
                                 <Badge variant="outline">
                                   <User className="h-3 w-3 mr-1" />
                                   Assigned
@@ -477,6 +489,10 @@ export default function WorkspaceDetailPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openViewTaskDialog(task)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View in Detail
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openEditTaskDialog(task)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
@@ -672,6 +688,24 @@ export default function WorkspaceDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+        </div>
+      </div>
+
+      {/* Task Side Panel */}
+      {viewingTask && (
+        <TaskSidePanel
+          task={viewingTask}
+          isOpen={isTaskSidePanelOpen}
+          onClose={closeTaskSidePanel}
+          onEdit={openEditTaskDialog}
+          onDelete={handleDeleteTask}
+          onStatusChange={handleTaskStatusChange}
+          isOwner={workspace?.owner_id === user?.id}
+          canEdit={workspace?.owner_id === user?.id || viewingTask.created_by === user?.id} // Add proper permission logic later
+          workspaceId={params.id as string}
+        />
+      )}
     </div>
   )
 }

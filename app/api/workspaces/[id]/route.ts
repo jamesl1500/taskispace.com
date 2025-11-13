@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { UpdateWorkspaceData, Workspace } from '@/types/workspaces'
+import { UpdateWorkspaceData } from '@/types/workspaces'
 import { WorkspaceService } from '@/lib/services/workspace-service'
 
 interface RouteParams {

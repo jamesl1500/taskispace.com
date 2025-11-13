@@ -1,6 +1,22 @@
+/**
+ * server.ts
+ * 
+ * Supabase client creation for server environments.
+ * 
+ * This module exports functions to create Supabase clients
+ * for use in server-side code, including support for authenticated requests.
+ * 
+ * @module lib/supabase/server
+ */
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+/**
+ * createClient
+ * Creates a Supabase client for server environments
+ * 
+ * @returns A Supabase client instance
+ */
 export async function createClient() {
   const cookieStore = await cookies()
 

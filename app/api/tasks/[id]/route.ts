@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { UpdateTaskData } from '@/types'
+import { collaboratorsApi } from '@/lib/api/taskManagement'
 
 interface RouteParams {
   params: Promise<{
-    id: string // task id
+    id: string
   }>
 }
 
@@ -18,104 +18,53 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: task, error } = await supabase
+    const { data: task, error: taskError } = await supabase
       .from('tasks')
-      .select(`
-        *,
-        workspace:workspaces(*)
-      `)
+      .select('*')
       .eq('id', resolvedParams.id)
       .single()
 
-    if (error) {
-      if (error.code === 'PGRST116') {
+    if (taskError) {
+      if (taskError.code === 'PGRST116') {
         return NextResponse.json({ error: 'Task not found' }, { status: 404 })
       }
-      console.error('Database error:', error)
       return NextResponse.json({ error: 'Failed to fetch task' }, { status: 500 })
     }
 
-    // Verify user has access to the workspace
-    if (task.workspace?.owner !== user.id) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
+    let listData = null
+    let workspaceData = null
+    
+    if (task.list_id) {
+      const { data: list } = await supabase
+        .from('lists')
+        .select('id, name, workspace_id')
+        .eq('id', task.list_id)
+        .single()
 
-    return NextResponse.json(task)
-  } catch (error) {
-    console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    const resolvedParams = await params
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // First verify the task exists and user has access
-    const { data: existingTask, error: fetchError } = await supabase
-      .from('tasks')
-      .select(`
-        id, 
-        status,
-        workspace:workspaces(owner)
-      `)
-      .eq('id', resolvedParams.id)
-      .single()
-
-    if (fetchError || !existingTask) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
-    }
-
-    if ((existingTask.workspace as { owner: string }[])?.[0]?.owner !== user.id) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
-
-    const body: UpdateTaskData = await request.json()
-
-    // Build update object with only provided fields
-    const updateData: Record<string, unknown> = {}
-    if (body.title !== undefined) updateData.title = body.title.trim()
-    if (body.description !== undefined) updateData.description = body.description?.trim() || null
-    if (body.status !== undefined) {
-      updateData.status = body.status
-      // Set completion timestamp when marking as completed
-      if (body.status === 'completed' && (existingTask as { status: string }).status !== 'completed') {
-        updateData.completed_at = new Date().toISOString()
-      } else if (body.status !== 'completed') {
-        updateData.completed_at = null
+      if (list) {
+        listData = list
+        
+        const { data: workspace } = await supabase
+          .from('workspaces')
+          .select('*')
+          .eq('id', list.workspace_id)
+          .single()
+        
+        if (workspace) {
+          workspaceData = workspace
+        }
       }
     }
-    if (body.priority !== undefined) updateData.priority = body.priority
-    if (body.assignee_id !== undefined) updateData.assignee_id = body.assignee_id
-    if (body.due_date !== undefined) updateData.due_date = body.due_date
-    if (body.tags !== undefined) updateData.tags = body.tags
 
-    // Validate title if provided
-    if (body.title !== undefined && body.title.trim().length === 0) {
-      return NextResponse.json({ error: 'Task title cannot be empty' }, { status: 400 })
+    const responseData = {
+      ...task,
+      workspace: workspaceData,
+      list: listData
     }
 
-    const { data: task, error } = await supabase
-      .from('tasks')
-      .update(updateData)
-      .eq('id', resolvedParams.id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Database error:', error)
-      return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
-    }
-
-    return NextResponse.json(task)
+    return NextResponse.json(responseData)
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Error in GET /api/tasks/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -130,38 +79,83 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // First verify the task exists and user has access
-    const { data: existingTask, error: fetchError } = await supabase
+    // Verify task exists and user has permission to delete
+    const { data: task, error: taskError } = await supabase
       .from('tasks')
-      .select(`
-        id,
-        workspace_id,
-        workspaces!inner(owner)
-      `)
+      .select('id, created_by')
       .eq('id', resolvedParams.id)
       .single()
 
-    if (fetchError || !existingTask) {
+    if (taskError || !task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
-    if ((existingTask.workspaces as { owner: string }[])?.[0]?.owner !== user.id) {
+    if (task.created_by !== user.id) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const { error } = await supabase
+    // Delete the task
+    const { error: deleteError } = await supabase
       .from('tasks')
       .delete()
       .eq('id', resolvedParams.id)
 
-    if (error) {
-      console.error('Database error:', error)
+    if (deleteError) {
       return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 })
     }
 
     return NextResponse.json({ message: 'Task deleted successfully' })
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Error in DELETE /api/tasks/[id]:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const resolvedParams = await params
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+
+    // Get task with access verification
+    const { data: task, error: taskError } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', resolvedParams.id)
+      .single()
+
+    if (taskError || !task) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
+    // Verify if logged user is a collaborator or owner
+    const collaborator = collaboratorsApi.getByTaskId(task.id)
+
+    if (task.created_by !== user.id) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
+
+    // Update the task
+    const { data: updatedTask, error: updateError } = await supabase
+      .from('tasks')
+      .update(body)
+      .eq('id', resolvedParams.id)
+      .select('*')
+      .single()
+
+    if (updateError) {
+      return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
+    }
+
+    return NextResponse.json(updatedTask)
+  } catch (error) {
+    console.error('Error in PATCH /api/tasks/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

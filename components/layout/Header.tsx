@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { User, LogOut, Settings, Plus, Menu } from 'lucide-react'
 import { useState } from 'react'
+import { SearchBar } from '@/components/search/SearchBar'
 
 export default function Header() {
   const { user, loading, signOut } = useAuth()
@@ -67,6 +68,9 @@ export default function Header() {
                     </Button>
                   </Link>
                 </nav>
+
+                {/* Search Bar */}
+                <SearchBar />
 
                 <Button variant="outline" size="sm" className="ml-2">
                   <Plus className="h-4 w-4 mr-1" />

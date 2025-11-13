@@ -17,14 +17,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // First verify the list exists and user has access to the workspace
+    // First verify the list exists (avoid complex joins that cause RLS recursion)
     const { data: list, error: listError } = await supabase
       .from('lists')
-      .select(`
-        id,
-        workspace_id,
-        workspaces!inner(owner_id)
-      `)
+      .select('id, workspace_id')
       .eq('id', resolvedParams.id)
       .single()
 
@@ -32,17 +28,21 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'List not found' }, { status: 404 })
     }
 
-    if ((list.workspaces as { owner_id: string }[])[0]?.owner_id !== user.id) {
+    // Then verify workspace ownership separately
+    const { data: workspace, error: workspaceError } = await supabase
+      .from('workspaces')
+      .select('id, owner_id')
+      .eq('id', list.workspace_id)
+      .single()
+
+    if (workspaceError || !workspace || workspace.owner_id !== user.id) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    // Get list members with user details
+    // Get list members (simple query to avoid foreign key issues)
     const { data: members, error } = await supabase
       .from('list_members')
-      .select(`
-        *,
-        user:profiles(id, email, full_name, avatar_url)
-      `)
+      .select('list_id, user_id, role, added_at, created_at, updated_at')
       .eq('list_id', resolvedParams.id)
 
     if (error) {
@@ -88,11 +88,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Then verify workspace ownership separately
     const { data: workspace, error: workspaceError } = await supabase
       .from('workspaces')
-      .select('id, owner')
+      .select('id, owner_id')
       .eq('id', list.workspace_id)
       .single()
 
-    if (workspaceError || !workspace || workspace.owner !== user.id) {
+    if (workspaceError || !workspace || workspace.owner_id !== user.id) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 

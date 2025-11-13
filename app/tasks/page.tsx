@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,115 +8,122 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { 
   Search,
   CheckCircle, 
-  Clock, 
-  AlertCircle,
+  Clock,
   Calendar,
   User,
   Tag,
-  FolderOpen
+  FolderOpen,
+  Users
 } from 'lucide-react'
 import Link from 'next/link'
-import { Task, TaskStatus, TaskPriority, TaskFilters } from '@/types'
+import { Task, TaskStatus, TaskPriority } from '@/types/tasks'
+
+interface TaskFilters {
+  search: string
+  status?: TaskStatus
+  priority?: TaskPriority
+  sortBy: keyof Task | 'priority'
+  sortOrder: 'asc' | 'desc'
+  showCollaborating: boolean
+}
+
+interface TaskWithWorkspace extends Task {
+  workspace?: {
+    id: string
+    name: string
+  }
+  list?: {
+    id: string
+    name: string
+  }
+  tags?: string[]
+}
 
 export default function TasksPage() {
   const { user, loading } = useAuth()
-  const [tasks, setTasks] = useState<Task[]>([])
+  const [tasks, setTasks] = useState<TaskWithWorkspace[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filters, setFilters] = useState<TaskFilters>({
     search: '',
     status: undefined,
     priority: undefined,
     sortBy: 'created_at',
-    sortOrder: 'desc'
+    sortOrder: 'desc',
+    showCollaborating: false
   })
 
-  useEffect(() => {
-    if (user) {
-      loadAllTasks()
-    }
-  }, [user, filters])
-
-  const loadAllTasks = async () => {
+  const loadAllTasks = useCallback(async () => {
+    if (!user) return
+    
     setIsLoading(true)
     try {
-      // TODO: Replace with actual API call to get all tasks across workspaces
-      const mockTasks: Task[] = [
-        {
-          id: '1',
-          title: 'Complete project proposal',
-          description: 'Write and review the Q1 project proposal document',
-          status: TaskStatus.IN_PROGRESS,
-          priority: TaskPriority.HIGH,
-          workspace_id: 'work-projects',
-          created_by: user!.id,
-          due_date: '2024-02-15T00:00:00Z',
-          created_at: '2024-01-15T10:00:00Z',
-          updated_at: '2024-01-18T14:30:00Z',
-          tags: ['proposal', 'urgent']
-        },
-        {
-          id: '2',
-          title: 'Review team performance',
-          description: 'Conduct quarterly review meetings with team members',
-          status: TaskStatus.TODO,
-          priority: TaskPriority.MEDIUM,
-          workspace_id: 'work-projects',
-          created_by: user!.id,
-          due_date: '2024-02-20T00:00:00Z',
-          created_at: '2024-01-16T09:00:00Z',
-          updated_at: '2024-01-16T09:00:00Z',
-          tags: ['hr', 'meeting']
-        },
-        {
-          id: '3',
-          title: 'Update personal blog',
-          description: 'Write new blog post about productivity tips',
-          status: TaskStatus.TODO,
-          priority: TaskPriority.LOW,
-          workspace_id: 'personal',
-          created_by: user!.id,
-          created_at: '2024-01-14T11:00:00Z',
-          updated_at: '2024-01-14T11:00:00Z',
-          tags: ['writing', 'blog']
-        },
-        {
-          id: '4',
-          title: 'Plan weekend trip',
-          description: 'Research and book accommodation for weekend getaway',
-          status: TaskStatus.COMPLETED,
-          priority: TaskPriority.MEDIUM,
-          workspace_id: 'personal',
-          created_by: user!.id,
-          completed_at: '2024-01-17T16:00:00Z',
-          created_at: '2024-01-12T10:00:00Z',
-          updated_at: '2024-01-17T16:00:00Z',
-          tags: ['travel', 'personal']
-        },
-        {
-          id: '5',
-          title: 'Fix kitchen sink',
-          description: 'Replace the leaky faucet in the kitchen',
-          status: TaskStatus.IN_REVIEW,
-          priority: TaskPriority.HIGH,
-          workspace_id: 'home-improvement',
-          created_by: user!.id,
-          due_date: '2024-02-10T00:00:00Z',
-          created_at: '2024-01-13T15:00:00Z',
-          updated_at: '2024-01-19T12:00:00Z',
-          tags: ['maintenance', 'urgent']
+      // Get tasks from user's workspaces
+      const workspacesResponse = await fetch('/api/workspaces')
+      if (!workspacesResponse.ok) throw new Error('Failed to load workspaces')
+      const workspaces = await workspacesResponse.json()
+
+      const allTasks: TaskWithWorkspace[] = []
+
+      // Load tasks from each workspace
+      for (const workspace of workspaces) {
+        try {
+          // Get lists for this workspace
+          const listsResponse = await fetch(`/api/lists?workspace_id=${workspace.id}`)
+          if (!listsResponse.ok) continue
+          const lists = await listsResponse.json()
+
+          // Get tasks for each list
+          for (const list of lists) {
+            try {
+              const tasksResponse = await fetch(`/api/tasks?list_id=${list.id}`)
+              if (!tasksResponse.ok) continue
+              const listTasks = await tasksResponse.json()
+
+              // Add workspace and list info to each task
+              listTasks.forEach((task: Task) => {
+                allTasks.push({
+                  ...task,
+                  workspace: {
+                    id: workspace.id,
+                    name: workspace.name
+                  },
+                  list: {
+                    id: list.id,
+                    name: list.name
+                  }
+                })
+              })
+            } catch (error) {
+              console.error(`Failed to load tasks for list ${list.id}:`, error)
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to load lists for workspace ${workspace.id}:`, error)
         }
-      ]
+      }
+
+      // If showing collaborating tasks, also get tasks where user is a collaborator
+      if (filters.showCollaborating) {
+        try {
+          // This would require a new API endpoint to get tasks by collaborator
+          // For now, we'll skip this but you could add it later
+        } catch (error) {
+          console.error('Failed to load collaborating tasks:', error)
+        }
+      }
 
       // Apply filters
-      let filteredTasks = mockTasks
+      let filteredTasks = allTasks
       if (filters.search) {
         filteredTasks = filteredTasks.filter(task => 
-          task.title.toLowerCase().includes(filters.search!.toLowerCase()) ||
-          task.description?.toLowerCase().includes(filters.search!.toLowerCase()) ||
-          task.tags?.some(tag => tag.toLowerCase().includes(filters.search!.toLowerCase()))
+          task.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+          task.description?.toLowerCase().includes(filters.search.toLowerCase()) ||
+          task.tags?.some(tag => tag.toLowerCase().includes(filters.search.toLowerCase()))
         )
       }
       if (filters.status) {
@@ -128,16 +135,23 @@ export default function TasksPage() {
 
       // Apply sorting
       filteredTasks.sort((a, b) => {
-        let aVal: any, bVal: any
+        let aVal: unknown, bVal: unknown
         if (filters.sortBy === 'priority') {
-          const priorityOrder = { [TaskPriority.URGENT]: 4, [TaskPriority.HIGH]: 3, [TaskPriority.MEDIUM]: 2, [TaskPriority.LOW]: 1 }
+          const priorityOrder = { 
+            [TaskPriority.HIGH]: 3, 
+            [TaskPriority.MEDIUM]: 2, 
+            [TaskPriority.LOW]: 1 
+          }
           aVal = priorityOrder[a.priority]
           bVal = priorityOrder[b.priority]
         } else {
-          aVal = a[filters.sortBy!]
-          bVal = b[filters.sortBy!]
+          aVal = a[filters.sortBy as keyof Task]
+          bVal = b[filters.sortBy as keyof Task]
         }
+        
         const order = filters.sortOrder === 'desc' ? -1 : 1
+        if (aVal === null || aVal === undefined) return 1
+        if (bVal === null || bVal === undefined) return -1
         return aVal < bVal ? order : aVal > bVal ? -order : 0
       })
 
@@ -147,17 +161,35 @@ export default function TasksPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, filters])
 
-  const handleToggleTaskStatus = async (task: Task) => {
-    const newStatus = task.status === TaskStatus.COMPLETED ? TaskStatus.TODO : TaskStatus.COMPLETED
-    const updatedTask = {
-      ...task,
-      status: newStatus,
-      completed_at: newStatus === TaskStatus.COMPLETED ? new Date().toISOString() : undefined,
-      updated_at: new Date().toISOString()
+  useEffect(() => {
+    if (user) {
+      loadAllTasks()
     }
-    setTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t))
+  }, [user, loadAllTasks])
+
+  const handleToggleTaskStatus = async (task: TaskWithWorkspace) => {
+    const newStatus = task.status === TaskStatus.COMPLETED ? TaskStatus.TODO : TaskStatus.COMPLETED
+    
+    try {
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          status: newStatus,
+          completed_at: newStatus === TaskStatus.COMPLETED ? new Date().toISOString() : null
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to update task')
+      
+      const updatedTask = await response.json()
+      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...updatedTask } : t))
+    } catch (error) {
+      console.error('Failed to update task status:', error)
+      alert('Failed to update task status. Please try again.')
+    }
   }
 
   const getStatusIcon = (status: TaskStatus) => {
@@ -166,8 +198,6 @@ export default function TasksPage() {
         return <CheckCircle className="h-4 w-4 text-green-600" />
       case TaskStatus.IN_PROGRESS:
         return <Clock className="h-4 w-4 text-blue-600" />
-      case TaskStatus.IN_REVIEW:
-        return <AlertCircle className="h-4 w-4 text-orange-600" />
       default:
         return <Clock className="h-4 w-4 text-slate-400" />
     }
@@ -175,24 +205,13 @@ export default function TasksPage() {
 
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
-      case TaskPriority.URGENT:
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
       case TaskPriority.HIGH:
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
       case TaskPriority.MEDIUM:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
       case TaskPriority.LOW:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
     }
-  }
-
-  const getWorkspaceDisplayName = (workspaceId: string) => {
-    const workspaceNames: Record<string, string> = {
-      'work-projects': 'Work Projects',
-      'personal': 'Personal',
-      'home-improvement': 'Home Improvement'
-    }
-    return workspaceNames[workspaceId] || workspaceId
   }
 
   if (loading || isLoading) {
@@ -234,10 +253,10 @@ export default function TasksPage() {
 
   const taskStats = {
     total: tasks.length,
-    completed: tasks.filter(t => t.status === TaskStatus.COMPLETED).length,
-    inProgress: tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length,
-    todo: tasks.filter(t => t.status === TaskStatus.TODO).length,
-    overdue: tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== TaskStatus.COMPLETED).length
+    completed: tasks.filter((t: TaskWithWorkspace) => t.status === TaskStatus.COMPLETED).length,
+    inProgress: tasks.filter((t: TaskWithWorkspace) => t.status === TaskStatus.IN_PROGRESS).length,
+    todo: tasks.filter((t: TaskWithWorkspace) => t.status === TaskStatus.TODO).length,
+    overdue: tasks.filter((t: TaskWithWorkspace) => t.due_date && new Date(t.due_date) < new Date() && t.status !== TaskStatus.COMPLETED).length
   }
 
   return (
@@ -297,18 +316,34 @@ export default function TasksPage() {
 
         {/* Filters */}
         <Card className="p-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search tasks..."
-                  value={filters.search}
-                  onChange={(e) => setFilters(prev => ({...prev, search: e.target.value}))}
-                  className="pl-10"
+          <div className="flex flex-col gap-4">
+            {/* Search and Toggle */}
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="flex-1 max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search tasks..."
+                    value={filters.search}
+                    onChange={(e) => setFilters(prev => ({...prev, search: e.target.value}))}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="collaborating"
+                  checked={filters.showCollaborating}
+                  onCheckedChange={(checked) => setFilters(prev => ({...prev, showCollaborating: checked}))}
                 />
+                <Label htmlFor="collaborating" className="text-sm">
+                  <Users className="h-4 w-4 inline mr-1" />
+                  Show collaborating tasks
+                </Label>
               </div>
             </div>
+            
+            {/* Filter Dropdowns */}
             <div className="flex flex-wrap gap-2">
               <Select 
                 value={filters.status || 'all'}
@@ -321,7 +356,6 @@ export default function TasksPage() {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value={TaskStatus.TODO}>To Do</SelectItem>
                   <SelectItem value={TaskStatus.IN_PROGRESS}>In Progress</SelectItem>
-                  <SelectItem value={TaskStatus.IN_REVIEW}>In Review</SelectItem>
                   <SelectItem value={TaskStatus.COMPLETED}>Completed</SelectItem>
                 </SelectContent>
               </Select>
@@ -334,7 +368,6 @@ export default function TasksPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value={TaskPriority.URGENT}>Urgent</SelectItem>
                   <SelectItem value={TaskPriority.HIGH}>High</SelectItem>
                   <SelectItem value={TaskPriority.MEDIUM}>Medium</SelectItem>
                   <SelectItem value={TaskPriority.LOW}>Low</SelectItem>
@@ -344,7 +377,7 @@ export default function TasksPage() {
                 value={`${filters.sortBy}-${filters.sortOrder}`}
                 onValueChange={(value) => {
                   const [sortBy, sortOrder] = value.split('-')
-                  setFilters(prev => ({...prev, sortBy: sortBy as any, sortOrder: sortOrder as any}))
+                  setFilters(prev => ({...prev, sortBy: sortBy as keyof Task, sortOrder: sortOrder as 'asc' | 'desc'}))
                 }}
               >
                 <SelectTrigger className="w-48">
@@ -401,9 +434,12 @@ export default function TasksPage() {
                       />
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          <h3 className={`font-medium ${task.status === TaskStatus.COMPLETED ? 'line-through text-slate-500' : 'text-slate-900 dark:text-white'}`}>
+                          <Link 
+                            href={`/tasks/${task.id}`}
+                            className={`font-medium hover:underline ${task.status === TaskStatus.COMPLETED ? 'line-through text-slate-500' : 'text-slate-900 dark:text-white hover:text-blue-600'}`}
+                          >
                             {task.title}
-                          </h3>
+                          </Link>
                           <div className="flex items-center space-x-2">
                             {getStatusIcon(task.status)}
                             <Badge className={getPriorityColor(task.priority)}>
@@ -420,12 +456,18 @@ export default function TasksPage() {
                           <div className="flex items-center space-x-1">
                             <FolderOpen className="h-3 w-3" />
                             <Link 
-                              href={`/workspaces/${task.workspace_id}`}
+                              href={`/workspaces/${task.workspace?.id}`}
                               className="hover:text-blue-600 dark:hover:text-blue-400 underline"
                             >
-                              {getWorkspaceDisplayName(task.workspace_id)}
+                              {task.workspace?.name}
                             </Link>
                           </div>
+                          {task.list && (
+                            <div className="flex items-center space-x-1">
+                              <span>in</span>
+                              <span className="font-medium">{task.list.name}</span>
+                            </div>
+                          )}
                           {task.due_date && (
                             <div className="flex items-center space-x-1">
                               <Calendar className="h-3 w-3" />
