@@ -1,323 +1,227 @@
 'use client'
 
+import { useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
-import { Search, Filter, Calendar, User, Briefcase, CheckSquare } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { SearchService, SearchResult } from '@/lib/services/search-service'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Search, User, Briefcase, CheckSquare, Clock } from 'lucide-react'
+import Link from 'next/link'
+import { useSearch } from '@/hooks/queries/useSearchQueries'
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(searchParams?.get('q') || '')
   const [typeFilter, setTypeFilter] = useState(searchParams?.get('type') || 'all')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [total, setTotal] = useState(0)
-  const [executionTime, setExecutionTime] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
   const [limit] = useState(10)
 
-  const performSearch = useCallback(async (searchQuery: string, page = 1) => {
-    if (!searchQuery.trim()) {
-      setResults([])
-      setTotal(0)
-      return
-    }
+  // Use React Query for search
+  const { 
+    data: searchResponse,
+    isLoading: loading,
+    error
+  } = useSearch(query, {
+    type: typeFilter === 'all' ? undefined : (typeFilter as 'user' | 'workspace' | 'task'),
+    limit,
+  }, {
+    enabled: query.length >= 2
+  })
 
-    setLoading(true)
-    try {
-      const response = await SearchService.search(searchQuery, {
-        type: typeFilter === 'all' ? undefined : (typeFilter as 'user' | 'workspace' | 'task'),
-        limit,
-        offset: (page - 1) * limit
-      })
+  const results = searchResponse?.results || []
+  const total = searchResponse?.total || 0
+  const executionTime = searchResponse?.execution_time || 0
 
-      setResults(response.results)
-      setTotal(response.total)
-      setExecutionTime(response.execution_time)
-    } catch (error) {
-      console.error('Search failed:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [typeFilter, limit])
+  const handleSearch = useCallback(() => {
+    // Search is automatically triggered by React Query when query changes
+  }, [])
 
-  useEffect(() => {
-    const initialQuery = searchParams?.get('q')
-    if (initialQuery) {
-      setQuery(initialQuery)
-      performSearch(initialQuery)
-    }
-  }, [searchParams, performSearch])
-
-  const handleSearch = () => {
-    setCurrentPage(1)
-    performSearch(query, 1)
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    performSearch(query, page)
-  }
-
-  const getResultIcon = (type: SearchResult['type']) => {
+  const getResultIcon = (type: string) => {
     switch (type) {
+      case 'user':
+        return <User className="h-4 w-4" />
       case 'workspace':
         return <Briefcase className="h-4 w-4" />
       case 'task':
         return <CheckSquare className="h-4 w-4" />
-      case 'user':
-        return <User className="h-4 w-4" />
       default:
         return <Search className="h-4 w-4" />
     }
   }
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return ''
-    return new Date(dateStr).toLocaleDateString()
+  const getResultBadgeColor = (type: string) => {
+    switch (type) {
+      case 'user':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+      case 'workspace':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+      case 'task':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+    }
   }
 
-  const totalPages = Math.ceil(total / limit)
-
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div className="space-y-6">
-        {/* Search Header */}
-        <div className="flex flex-col space-y-4">
-          <h1 className="text-2xl font-bold">Search</h1>
-          
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search workspaces, tasks..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10"
-              />
-            </div>
-            
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Results</SelectItem>
-                <SelectItem value="workspace">Workspaces</SelectItem>
-                <SelectItem value="task">Tasks</SelectItem>
-                <SelectItem value="user">Users</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button onClick={handleSearch} disabled={loading}>
-              {loading ? 'Searching...' : 'Search'}
-            </Button>
-          </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+            Search
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400">
+            Search across your workspaces, tasks, and more
+          </p>
         </div>
 
-        {/* Search Results */}
-        {query && (
-          <>
-            {/* Results Summary */}
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {total > 0 
-                  ? `Found ${total} result${total !== 1 ? 's' : ''} for "${query}"`
-                  : `No results found for "${query}"`
-                }
-                {executionTime > 0 && ` (${executionTime}ms)`}
-              </p>
+        {/* Search Form */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Search Query</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Enter your search query..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               
-              {totalPages > 1 && (
-                <p className="text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages}
-                </p>
-              )}
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="md:w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="user">Users</SelectItem>
+                  <SelectItem value="workspace">Workspaces</SelectItem>
+                  <SelectItem value="task">Tasks</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button onClick={handleSearch} disabled={loading || query.length < 2}>
+                {loading ? 'Searching...' : 'Search'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Search Results */}
+        {error && (
+          <Card className="mb-6">
+            <CardContent className="py-6">
+              <div className="text-center text-red-600 dark:text-red-400">
+                Error performing search: {error.message}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {query.length < 2 && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                Start Searching
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                Enter at least 2 characters to begin searching.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {query.length >= 2 && !loading && results.length === 0 && !error && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                No Results Found
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 mb-4">
+                No results found for &quot;{query}&quot;. Try adjusting your search terms.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {loading && (
+          <Card>
+            <CardContent className="py-12">
+              <div className="animate-pulse space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {results.length > 0 && (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Found {total} results in {executionTime}ms
+              </p>
             </div>
 
-            {/* Results List */}
             <div className="space-y-4">
               {results.map((result) => (
-                <Card key={result.id} className="hover:shadow-md transition-shadow">
+                <Card key={`${result.type}-${result.id}`} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start space-x-4">
                       <div className="flex-shrink-0 mt-1">
-                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                          {getResultIcon(result.type)}
-                        </div>
+                        {getResultIcon(result.type)}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-medium truncate">
-                            <a 
-                              href={result.url}
-                              className="hover:text-primary transition-colors"
-                            >
-                              {result.title}
-                            </a>
-                          </h3>
-                          <Badge variant="secondary">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Link 
+                            href={result.url}
+                            className="font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors"
+                          >
+                            {result.title}
+                          </Link>
+                          <Badge className={getResultBadgeColor(result.type)}>
                             {result.type}
                           </Badge>
                         </div>
                         
                         {result.subtitle && (
-                          <p className="text-sm text-muted-foreground mb-1">
+                          <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
                             {result.subtitle}
                           </p>
                         )}
                         
                         {result.description && (
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                          <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2">
                             {result.description}
                           </p>
                         )}
                         
-                        {/* Metadata */}
-                        {result.metadata && (
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            {result.metadata.created_at && typeof result.metadata.created_at === 'string' && (
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {formatDate(result.metadata.created_at as string)}
-                              </div>
-                            )}
-                            
-                            {result.metadata.status && typeof result.metadata.status === 'string' && (
-                              <Badge variant="outline" className="text-xs">
-                                {result.metadata.status}
-                              </Badge>
-                            )}
-                            
-                            {result.metadata.priority && typeof result.metadata.priority === 'string' && (
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs ${
-                                  result.metadata.priority === 'high' ? 'border-red-200 text-red-700' :
-                                  result.metadata.priority === 'medium' ? 'border-yellow-200 text-yellow-700' :
-                                  'border-green-200 text-green-700'
-                                }`}
-                              >
-                                {result.metadata.priority}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
+                        <div className="flex items-center space-x-2 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                          <Clock className="h-3 w-3" />
+                          <span>Score: {result.score}</span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage <= 1}
-                >
-                  Previous
-                </Button>
-                
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i
-                  if (page > totalPages) return null
-                  
-                  return (
-                    <Button
-                      key={page}
-                      variant={page === currentPage ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </Button>
-                  )
-                })}
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-
-            {/* No Results */}
-            {!loading && query && results.length === 0 && (
-              <Card>
-                <CardContent className="py-12">
-                  <div className="text-center space-y-4">
-                    <Search className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <div>
-                      <h3 className="text-lg font-medium">No results found</h3>
-                      <p className="text-muted-foreground mt-1">
-                        Try adjusting your search terms or filters
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </>
-        )}
-
-        {/* Getting Started */}
-        {!query && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Search TaskiSpace
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                Search across your workspaces, tasks, and team members. Use the search bar above to get started.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <Briefcase className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">Workspaces</h4>
-                  <p className="text-sm text-muted-foreground">Find your projects and teams</p>
-                </div>
-                
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <CheckSquare className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">Tasks</h4>
-                  <p className="text-sm text-muted-foreground">Locate specific tasks and todos</p>
-                </div>
-                
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <User className="h-8 w-8 mx-auto mb-2 text-primary" />
-                  <h4 className="font-medium">Team Members</h4>
-                  <p className="text-sm text-muted-foreground">Connect with colleagues</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         )}
       </div>
     </div>

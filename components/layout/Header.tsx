@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth, useSignOut } from '@/hooks/queries/useAuthQueries'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -16,11 +16,12 @@ import { useState } from 'react'
 import { SearchBar } from '@/components/search/SearchBar'
 
 export default function Header() {
-  const { user, loading, signOut } = useAuth()
+  const { user, loading } = useAuth()
+  const { mutate: signOut } = useSignOut()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const handleSignOut = async () => {
-    await signOut()
+  const handleSignOut = () => {
+    signOut()
   }
 
   const getInitials = (name: string | undefined) => {

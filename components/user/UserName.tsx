@@ -11,7 +11,6 @@
  */
 'use client'
 
-import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { UserService } from '@/lib/services/user-service'
 
@@ -19,20 +18,19 @@ interface UserNameProps {
   userId: string
 }
 
-export function UserName({ userId }: UserNameProps) {
+export default function UserName({ userId }: UserNameProps) {
   const us = new UserService()
-  const { user, loading, error } = useQuery({
+  const { data: user, isLoading, error } = useQuery({
     queryKey: ['user', userId],
     queryFn: async () => {
       if (!userId) return null
-      const { data, error: fetchError } = await us.getUserById(userId)
-      if (fetchError) throw new Error(fetchError.message)
-      return data
+      const { user } = await us.getUserById(userId)
+      return user
     },
     enabled: !!userId
   })
 
-  if (loading) {
+  if (isLoading) {
     return <span>Loading...</span>
   }
 
@@ -40,7 +38,7 @@ export function UserName({ userId }: UserNameProps) {
     return <span>Unknown User</span>
   }
 
-  return <span>{user.user_metadata?.full_name}</span>
+  return (
+    <span>{user.user_metadata?.full_name}</span>
+  )
 }
-
-export default UserName
