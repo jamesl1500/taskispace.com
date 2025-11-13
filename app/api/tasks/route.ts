@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, description, status, priority, workspace_id, list_id, assignee_id, due_date, tags } = body
+    const { title, description, status, priority, workspace_id, list_id, assignee_id, due_date } = body
 
     if (!title || !workspace_id || !list_id) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -119,6 +119,41 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Database error:', error)
       return NextResponse.json({ error: 'Failed to create task' }, { status: 500 })
+    }
+
+    // Automatically add the creator as a task collaborator with 'assignee' role
+    const { error: collaboratorError } = await supabase
+      .from('task_collaborators')
+      .insert({
+        task_id: task.id,
+        user_id: user.id,
+        role: 'assignee',
+        added_by: user.id
+      })
+
+    if (collaboratorError) {
+      console.error('Failed to add task collaborator:', collaboratorError)
+      // Don't fail the task creation if collaborator addition fails
+      // Just log the error for debugging
+    }
+
+    // Log task creation activity
+    const { error: activityError } = await supabase
+      .from('task_activity')
+      .insert({
+        task_id: task.id,
+        actor: user.id,
+        type: 'task_created',
+        payload: {
+          title: task.title,
+          status: task.status,
+          priority: task.priority
+        }
+      })
+
+    if (activityError) {
+      console.error('Failed to log task activity:', activityError)
+      // Don't fail the task creation if activity logging fails
     }
 
     return NextResponse.json(task)

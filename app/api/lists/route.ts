@@ -141,13 +141,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create list' }, { status: 500 })
     }
 
-    // Create list member
+    // Create list member - user who creates the list gets admin role
     const { data: listMember, error: memberError } = await supabase
       .from('list_members')
       .insert({
         list_id: newList.id,
         user_id: user.id,
-        role: 'owner'
+        role: 'admin'
       })
       .select()
       .single()
@@ -155,6 +155,24 @@ export async function POST(request: NextRequest) {
     if (memberError || !listMember) {
       console.error('Create list member error:', memberError)
       return NextResponse.json({ error: 'Failed to create list member' }, { status: 500 })
+    }
+
+    // Log list creation activity (optional, but good for audit trail)
+    const { error: activityError } = await supabase
+      .from('activity')
+      .insert({
+        actor: user.id,
+        list_id: newList.id,
+        type: 'list_created',
+        payload: {
+          list_name: newList.name,
+          workspace_id: newList.workspace_id
+        }
+      })
+
+    if (activityError) {
+      console.error('Failed to log list creation activity:', activityError)
+      // Don't fail the list creation if activity logging fails
     }
 
     return NextResponse.json(newList, { status: 201 })
