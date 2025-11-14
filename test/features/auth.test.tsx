@@ -16,20 +16,21 @@ vi.mock('@/hooks/queries/useAuthQueries', () => ({
   useSignUp: () => mockUseSignUp(),
 }))
 
-// Import the mocked functions
-import { useSignIn, useSignOut, useSignUp } from '@/hooks/queries/useAuthQueries'
+
+
+// Mock sign in function
+const mockSignInFunction = vi.fn()
+const mockSignUpFunction = vi.fn()
 
 // Mock components for testing
 const MockLoginPage = () => {
-  const { mutate: signIn } = require('@/hooks/queries/useAuthQueries').useSignIn()
-  
   return (
     <div>
       <h1>Login</h1>
       <form onSubmit={(e) => {
         e.preventDefault()
         const formData = new FormData(e.target as HTMLFormElement)
-        signIn({
+        mockSignInFunction({
           email: formData.get('email') as string,
           password: formData.get('password') as string,
         })
@@ -55,15 +56,13 @@ const MockLoginPage = () => {
 }
 
 const MockSignUpPage = () => {
-  const { mutate: signUp } = require('@/hooks/queries/useAuthQueries').useSignUp()
-  
   return (
     <div>
       <h1>Sign Up</h1>
       <form onSubmit={(e) => {
         e.preventDefault()
         const formData = new FormData(e.target as HTMLFormElement)
-        signUp({
+        mockSignUpFunction({
           email: formData.get('email') as string,
           password: formData.get('password') as string,
         })
@@ -128,13 +127,6 @@ describe('Authentication Features', () => {
     })
 
     it('should handle login form submission', async () => {
-      const mockSignIn = vi.fn()
-      vi.mocked(require('@/hooks/queries/useAuthQueries').useSignIn).mockReturnValue({
-        mutate: mockSignIn,
-        isPending: false,
-        error: null
-      })
-
       render(
         <TestWrapper>
           <MockLoginPage />
@@ -150,7 +142,7 @@ describe('Authentication Features', () => {
       fireEvent.click(loginButton)
 
       await waitFor(() => {
-        expect(mockSignIn).toHaveBeenCalledWith({
+        expect(mockSignInFunction).toHaveBeenCalledWith({
           email: 'test@example.com',
           password: 'password123',
         })
@@ -158,7 +150,7 @@ describe('Authentication Features', () => {
     })
 
     it('should show loading state during login', () => {
-      vi.mocked(require('@/hooks/queries/useAuthQueries').useSignIn).mockReturnValue({
+      mockUseSignIn.mockReturnValue({
         mutate: vi.fn(),
         isPending: true,
         error: null
@@ -176,7 +168,7 @@ describe('Authentication Features', () => {
 
     it('should handle login errors', () => {
       const mockError = { message: 'Invalid credentials' }
-      vi.mocked(require('@/hooks/queries/useAuthQueries').useSignIn).mockReturnValue({
+      mockUseSignIn.mockReturnValue({
         mutate: vi.fn(),
         isPending: false,
         error: mockError
@@ -208,13 +200,6 @@ describe('Authentication Features', () => {
     })
 
     it('should handle signup form submission', async () => {
-      const mockSignUp = vi.fn()
-      vi.mocked(require('@/hooks/queries/useAuthQueries').useSignUp).mockReturnValue({
-        mutate: mockSignUp,
-        isPending: false,
-        error: null
-      })
-
       render(
         <TestWrapper>
           <MockSignUpPage />
@@ -230,7 +215,7 @@ describe('Authentication Features', () => {
       fireEvent.click(signupButton)
 
       await waitFor(() => {
-        expect(mockSignUp).toHaveBeenCalledWith({
+        expect(mockSignUpFunction).toHaveBeenCalledWith({
           email: 'newuser@example.com',
           password: 'newpassword123',
         })
@@ -268,7 +253,7 @@ describe('Authentication Features', () => {
 
     it('should handle logout', async () => {
       const mockSignOut = vi.fn()
-      vi.mocked(require('@/hooks/queries/useAuthQueries').useSignOut).mockReturnValue({
+      mockUseSignOut.mockReturnValue({
         mutate: mockSignOut,
         isPending: false
       })

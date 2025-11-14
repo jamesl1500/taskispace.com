@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock search functions
 const mockPerformSearch = vi.fn()
-const mockGetRecentSearches = vi.fn()
 const mockSaveRecentSearch = vi.fn()
 const mockClearRecentSearches = vi.fn()
 const mockUseSearch = vi.fn()
@@ -678,7 +677,7 @@ describe('Search Functionality', () => {
       let callCount = 0
 
       // Mock debounced search - only final query should trigger search
-      mockPerformSearch.mockImplementation(async (params: any) => {
+      mockPerformSearch.mockImplementation(async (params: { query: string }) => {
         callCount++
         if (params.query === 'search') {
           return {

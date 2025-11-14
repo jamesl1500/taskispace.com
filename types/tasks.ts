@@ -246,6 +246,7 @@ export enum TaskPriority {
  * Task Collaborator Role Enum
  */
 export enum TaskCollaboratorRole {
+  OWNER = 'owner',
   ASSIGNEE = 'assignee',
   REVIEWER = 'reviewer',
   OBSERVER = 'observer'

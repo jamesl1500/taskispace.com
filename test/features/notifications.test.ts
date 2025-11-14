@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock notification functions
-const mockGetNotifications = vi.fn()
 const mockMarkAsRead = vi.fn()
 const mockMarkAllAsRead = vi.fn()
 const mockDeleteNotification = vi.fn()
@@ -169,7 +168,7 @@ describe('Notification System', () => {
 
       const result = mockUseNotifications()
       expect(result.data).toHaveLength(2)
-      expect(result.data.every(n => !n.is_read)).toBe(true)
+      expect(result.data.every((n: MockNotification) => !n.is_read)).toBe(true)
     })
 
     it('should sort notifications by creation date', () => {

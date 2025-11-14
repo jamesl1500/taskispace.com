@@ -68,6 +68,11 @@ export default function Header() {
                       Tasks
                     </Button>
                   </Link>
+                  <Link href="/conversations">
+                    <Button variant="ghost" size="sm">
+                      Conversations
+                    </Button>
+                  </Link>
                 </nav>
 
                 {/* Search Bar */}

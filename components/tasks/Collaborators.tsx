@@ -12,6 +12,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, MoreVertical, Edit, Trash2, Users, UserCheck, Eye } from 'lucide-react'
 import { collaboratorsApi } from '@/lib/api/taskManagement'
 import { TaskCollaborator, TaskCollaboratorRole } from '@/types/tasks'
+import UserAvatar from '../user/UserAvatar'
+import UserName from '../user/UserName'
 
 interface CollaboratorsProps {
   taskId: string
@@ -27,7 +29,7 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
   
   const [addForm, setAddForm] = useState({
     user_id: '',
-    role: TaskCollaboratorRole.OBSERVER as TaskCollaboratorRole
+    role: TaskCollaboratorRole.OWNER as TaskCollaboratorRole
   })
 
   const loadCollaborators = useCallback(async () => {
@@ -99,6 +101,8 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
 
   const getRoleIcon = (role: TaskCollaboratorRole) => {
     switch (role) {
+      case TaskCollaboratorRole.OWNER:
+        return <Users className="h-4 w-4" />
       case TaskCollaboratorRole.ASSIGNEE:
         return <UserCheck className="h-4 w-4" />
       case TaskCollaboratorRole.REVIEWER:
@@ -112,6 +116,8 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
 
   const getRoleColor = (role: TaskCollaboratorRole) => {
     switch (role) {
+      case TaskCollaboratorRole.OWNER:
+        return 'bg-purple-100 text-purple-800'
       case TaskCollaboratorRole.ASSIGNEE:
         return 'bg-blue-100 text-blue-800'
       case TaskCollaboratorRole.REVIEWER:
@@ -174,9 +180,10 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
         ) : (
           collaborators.map((collaborator) => (
             <Card key={collaborator.id} className="border border-gray-200">
-              <CardContent className="p-4">
+              <CardContent className="">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
+                    <UserAvatar userId={collaborator.user_id} size={40} />
                     <AvatarFallback>
                       {collaborator.user_id.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -184,7 +191,7 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
                   
                   <div className="flex-1 min-w-0">
                     <h5 className="font-medium text-gray-900">
-                      {collaborator.user_id}
+                      <UserName userId={collaborator.user_id} />
                     </h5>
                     <p className="text-sm text-gray-500">
                       Added {new Date(collaborator.added_at).toLocaleDateString()}
@@ -255,6 +262,12 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value={TaskCollaboratorRole.OWNER}>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Owner - Full access to task and collaborators
+                    </div>
+                  </SelectItem>
                   <SelectItem value={TaskCollaboratorRole.ASSIGNEE}>
                     <div className="flex items-center gap-2">
                       <UserCheck className="h-4 w-4" />
@@ -300,14 +313,15 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <Avatar className="h-8 w-8">
+                  <UserAvatar userId={editingCollaborator.user_id} size={32} />
                   <AvatarFallback>
                     {editingCollaborator.user_id.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{editingCollaborator.user_id}</p>
+                  <p className="font-medium"><UserName userId={editingCollaborator.user_id} /></p>
                   <p className="text-sm text-gray-500">
-                    Current role: {editingCollaborator.role}
+                    Current role: {editingCollaborator.role.charAt(0).toUpperCase() + editingCollaborator.role.slice(1)}
                   </p>
                 </div>
               </div>
@@ -324,6 +338,12 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value={TaskCollaboratorRole.OWNER}>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Owner
+                      </div>
+                    </SelectItem>
                     <SelectItem value={TaskCollaboratorRole.ASSIGNEE}>
                       <div className="flex items-center gap-2">
                         <UserCheck className="h-4 w-4" />

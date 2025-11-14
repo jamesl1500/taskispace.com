@@ -15,7 +15,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const collaboratorId = params.id
+    const { id: collaboratorId } = await params
 
     // Get the collaborator
     const { data: collaborator, error: collaboratorError } = await supabase
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const isOwner = (list.workspaces as { owner_id: string }[])[0]?.owner_id === user.id
+    const isOwner = (list.workspaces as { owner_id?: string })?.owner_id === user.id
 
     if (!isOwner) {
       const { data: userCollaborator } = await supabase
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const collaboratorId = params.id
+    const { id: collaboratorId } = await params
     const { role } = await request.json()
 
     if (!role) {
@@ -101,7 +101,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const isOwner = (list.workspaces as { owner_id: string }[])[0]?.owner_id === user.id
+    const isOwner = (list.workspaces as { owner_id?: string })?.owner_id === user.id
     const isCreator = taskCollaborator.tasks.created_by === user.id
 
     if (!isOwner && !isCreator) {
@@ -149,7 +149,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const collaboratorId = params.id
+    const { id: collaboratorId } = await params
 
     // Get the collaborator to delete
     const { data: existingCollaborator, error: collaboratorError } = await supabase
@@ -174,7 +174,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const isOwner = (list.workspaces as { owner_id: string }[])[0]?.owner_id === user.id
+    const isOwner = (list.workspaces as { owner_id?: string })?.owner_id === user.id
     const isCreator = taskCollaborator.tasks.created_by === user.id
     const isSelf = existingCollaborator.user_id === user.id
 

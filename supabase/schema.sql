@@ -14,6 +14,41 @@ CREATE TABLE public.activity (
   CONSTRAINT activity_list_id_fkey FOREIGN KEY (list_id) REFERENCES public.lists(id),
   CONSTRAINT activity_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id)
 );
+CREATE TABLE public.conversation_members (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  conversation_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  role character varying NOT NULL DEFAULT 'member'::character varying,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT conversation_members_pkey PRIMARY KEY (id),
+  CONSTRAINT conversation_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT conversation_members_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id)
+);
+CREATE TABLE public.conversation_messages (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  conversation_member_id bigint,
+  conversation_id uuid NOT NULL,
+  subject character varying DEFAULT '255'::character varying,
+  content text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  attachments json,
+  CONSTRAINT conversation_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT conversation_messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id),
+  CONSTRAINT conversation_messages_conversation_member_id_fkey FOREIGN KEY (conversation_member_id) REFERENCES public.conversation_members(id),
+  CONSTRAINT conversation_messages_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.conversations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying DEFAULT '255'::character varying,
+  description character varying,
+  created_by uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT conversations_pkey PRIMARY KEY (id),
+  CONSTRAINT conversations_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+);
 CREATE TABLE public.list_members (
   list_id uuid NOT NULL,
   user_id uuid NOT NULL,
@@ -45,6 +80,7 @@ CREATE TABLE public.subtasks (
   title text NOT NULL,
   done boolean NOT NULL DEFAULT false,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
+  description text,
   CONSTRAINT subtasks_pkey PRIMARY KEY (id),
   CONSTRAINT subtasks_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id)
 );
@@ -75,6 +111,7 @@ CREATE TABLE public.task_collaborators (
   role USER-DEFINED NOT NULL DEFAULT 'assignee'::task_role_enum,
   added_by uuid NOT NULL,
   added_at timestamp with time zone NOT NULL DEFAULT now(),
+  id uuid DEFAULT gen_random_uuid(),
   CONSTRAINT task_collaborators_pkey PRIMARY KEY (task_id, user_id),
   CONSTRAINT task_collaborators_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id),
   CONSTRAINT task_collaborators_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
@@ -98,7 +135,8 @@ CREATE TABLE public.task_tags (
   tag_id uuid NOT NULL,
   created_at timestamp without time zone DEFAULT now(),
   updated_at timestamp without time zone DEFAULT now(),
-  CONSTRAINT task_tags_pkey PRIMARY KEY (task_id, tag_id),
+  task_tag_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  CONSTRAINT task_tags_pkey PRIMARY KEY (task_id, tag_id, task_tag_id),
   CONSTRAINT task_tags_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id),
   CONSTRAINT task_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id)
 );

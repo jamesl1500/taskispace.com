@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const isOwner = (list.workspaces as { owner_id: string }[])[0]?.owner_id === user.id
+    const isOwner = (list.workspaces as { owner_id?: string })?.owner_id === user.id
     const isCreator = task.created_by === user.id
 
     if (!isOwner && !isCreator) {

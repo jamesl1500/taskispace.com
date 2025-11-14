@@ -1,5 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Task type definition
+interface Task {
+  id: string
+  title: string
+  description?: string | null
+  status: string
+  priority: string
+  list_id: string
+  created_by: string
+  assignee?: string | null
+  due_date?: string | null
+  created_at: string
+  updated_at?: string
+  completed_at?: string
+}
+
 // Mock task functions
 const mockCreateTask = vi.fn()
 const mockUpdateTask = vi.fn()
@@ -111,7 +127,8 @@ describe('Task Management', () => {
           status: 'todo',
           priority: 'medium',
           list_id: 'list1',
-          created_by: 'user1'
+          created_by: 'user1',
+          created_at: '2024-01-01'
         }
       ]
 
@@ -122,7 +139,7 @@ describe('Task Management', () => {
       })
 
       const result = mockUseTasks()
-      expect(result.data.every((task: any) => task.status === 'todo')).toBe(true)
+      expect(result.data.every((task: Task) => task.status === 'todo')).toBe(true)
     })
 
     it('should filter tasks by priority', () => {
@@ -133,7 +150,8 @@ describe('Task Management', () => {
           status: 'todo',
           priority: 'high',
           list_id: 'list1',
-          created_by: 'user1'
+          created_by: 'user1',
+          created_at: '2024-01-01'
         }
       ]
 
@@ -144,7 +162,7 @@ describe('Task Management', () => {
       })
 
       const result = mockUseTasks()
-      expect(result.data.every((task: any) => task.priority === 'high')).toBe(true)
+      expect(result.data.every((task: Task) => task.priority === 'high')).toBe(true)
     })
   })
 
@@ -389,7 +407,7 @@ describe('Task Management', () => {
       const taskId = '1'
       
       // Test todo -> in_progress
-      let updatedTask = {
+      let updatedTask: Partial<Task> = {
         id: taskId,
         status: 'in_progress',
         updated_at: '2024-01-03'
@@ -457,10 +475,13 @@ describe('Task Management', () => {
       const searchResults = [
         {
           id: '1',
-          title: 'Setup project configuration',
-          description: 'Configure the project setup',
+          title: 'Setup Task',
+          description: 'Task related to setup',
           status: 'todo',
-          list_id: 'list1'
+          priority: 'medium',
+          list_id: 'list1',
+          created_by: 'user1',
+          created_at: '2024-01-01'
         }
       ]
 
@@ -471,7 +492,7 @@ describe('Task Management', () => {
       })
 
       const result = mockUseTasks()
-      expect(result.data.every((task: any) => 
+      expect(result.data.every((task: Task) => 
         task.title.toLowerCase().includes('setup') || 
         task.description?.toLowerCase().includes('setup')
       )).toBe(true)
@@ -484,7 +505,10 @@ describe('Task Management', () => {
           title: 'User Task',
           assignee: 'user1',
           status: 'todo',
-          list_id: 'list1'
+          priority: 'medium',
+          list_id: 'list1',
+          created_by: 'user1',
+          created_at: '2024-01-01'
         }
       ]
 
@@ -495,7 +519,7 @@ describe('Task Management', () => {
       })
 
       const result = mockUseTasks()
-      expect(result.data.every((task: any) => task.assignee === 'user1')).toBe(true)
+      expect(result.data.every((task: Task) => task.assignee === 'user1')).toBe(true)
     })
 
     it('should filter by due date range', () => {
@@ -505,7 +529,10 @@ describe('Task Management', () => {
           title: 'Due Soon Task',
           due_date: '2024-01-15',
           status: 'todo',
-          list_id: 'list1'
+          priority: 'medium',
+          list_id: 'list1',
+          created_by: 'user1',
+          created_at: '2024-01-01'
         }
       ]
 
@@ -516,7 +543,7 @@ describe('Task Management', () => {
       })
 
       const result = mockUseTasks()
-      expect(result.data.every((task: any) => task.due_date <= '2024-01-20')).toBe(true)
+      expect(result.data.every((task: Task) => task.due_date && task.due_date <= '2024-01-20')).toBe(true)
     })
   })
 
@@ -577,7 +604,7 @@ describe('Task Management', () => {
 
       const result = mockUseTasks()
       const priorities = ['high', 'medium', 'low']
-      expect(result.data.every((task: any, index: number) => 
+      expect(result.data.every((task: Task, index: number) => 
         task.priority === priorities[index]
       )).toBe(true)
     })
