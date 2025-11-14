@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import Header from "@/components/layout/Header";
 import QueryProvider from "@/components/providers/QueryProvider";
-import { Toaster } from "sonner";
 
 import "./globals.css";
 
@@ -37,7 +36,6 @@ export default function RootLayout({
             <Header />
           </div>
           {children}
-          <Toaster />
         </QueryProvider>
       </body>
     </html>
