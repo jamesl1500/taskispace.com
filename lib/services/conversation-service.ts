@@ -12,6 +12,12 @@ import {
 } from '@/types/conversations'
 
 class ConversationService {
+  /**
+   * Get all conversations for a user
+   * 
+   * @param userId The ID of the user
+   * @returns A list of conversations with details
+   */
   async getConversations(userId: string): Promise<ConversationWithDetails[]> {
     const supabase = await createClient()
     
@@ -67,6 +73,13 @@ class ConversationService {
     return processedConversations
   }
 
+  /**
+   * Get a specific conversation with details
+   * 
+   * @param conversationId The ID of the conversation
+   * @param userId The ID of the user requesting the conversation
+   * @returns The conversation with details or null if not found
+   */
   async getConversation(conversationId: string, userId: string): Promise<ConversationWithDetails | null> {
     const supabase = await createClient()
     
@@ -114,8 +127,21 @@ class ConversationService {
     }
   }
 
+  /**
+   * Create a new conversation
+   * 
+   * @param data The conversation data
+   * @param createdBy The ID of the user creating the conversation
+   * @returns The created conversation
+   */
   async createConversation(data: CreateConversationData, createdBy: string): Promise<Conversation> {
     const supabase = await createClient()
+    
+    // Validate that we have at least one other member besides the creator
+    const otherMembers = data.member_ids?.filter(id => id !== createdBy) || []
+    if (otherMembers.length === 0) {
+      throw new Error('Conversations must include at least one other person besides yourself')
+    }
     
     const { data: conversation, error } = await supabase
       .from('conversations')
@@ -162,6 +188,14 @@ class ConversationService {
     return conversation
   }
 
+  /**
+   * Update a conversation
+   * 
+   * @param conversationId The ID of the conversation to update
+   * @param data The updated conversation data
+   * @param userId The ID of the user updating the conversation
+   * @returns The updated conversation
+   */
   async updateConversation(conversationId: string, data: UpdateConversationData, userId: string): Promise<Conversation> {
     const supabase = await createClient()
     
@@ -192,6 +226,12 @@ class ConversationService {
     return conversation
   }
 
+  /**
+   * Delete a conversation
+   * 
+   * @param conversationId The ID of the conversation to delete
+   * @param userId The ID of the user deleting the conversation
+   */
   async deleteConversation(conversationId: string, userId: string): Promise<void> {
     const supabase = await createClient()
     
@@ -221,6 +261,13 @@ class ConversationService {
     if (error) throw error
   }
 
+  /**
+   * Get all members of a conversation
+   * 
+   * @param conversationId The ID of the conversation
+   * @param userId The ID of the user requesting the members
+   * @returns A list of conversation members with user details
+   */
   async getConversationMembers(conversationId: string, userId: string): Promise<ConversationMemberWithUser[]> {
     const supabase = await createClient()
     
@@ -258,6 +305,14 @@ class ConversationService {
     return membersWithUser
   }
 
+  /**
+   * Add a member to a conversation
+   * 
+   * @param conversationId The ID of the conversation
+   * @param userIdToAdd The ID of the user to add
+   * @param addedBy The ID of the user adding the member
+   * @returns The created conversation member
+   */
   async addConversationMember(conversationId: string, userIdToAdd: string, addedBy: string): Promise<ConversationMember> {
     const supabase = await createClient()
     
@@ -288,6 +343,14 @@ class ConversationService {
     return data
   }
 
+  /**
+   * Update a conversation member's role
+   * 
+   * @param memberId The ID of the member to update
+   * @param role The new role for the member
+   * @param updatedBy The ID of the user updating the member
+   * @returns The updated conversation member
+   */
   async updateConversationMember(memberId: number, role: 'admin' | 'member', updatedBy: string): Promise<ConversationMember> {
     const supabase = await createClient()
     
@@ -329,6 +392,12 @@ class ConversationService {
     return data
   }
 
+  /**
+   * Remove a member from a conversation
+   * 
+   * @param memberId The ID of the member to remove
+   * @param removedBy The ID of the user removing the member
+   */
   async removeConversationMember(memberId: number, removedBy: string): Promise<void> {
     const supabase = await createClient()
     
@@ -363,6 +432,15 @@ class ConversationService {
     if (error) throw error
   }
 
+  /**
+   * Get messages for a conversation
+   * 
+   * @param conversationId The ID of the conversation
+   * @param userId The ID of the user requesting the messages
+   * @param limit The maximum number of messages to return
+   * @param offset The offset for pagination
+   * @returns A list of conversation messages with user details
+   */
   async getConversationMessages(conversationId: string, userId: string, limit = 50, offset = 0): Promise<ConversationMessageWithUser[]> {
     const supabase = await createClient()
     
@@ -400,6 +478,14 @@ class ConversationService {
     return messagesWithUser
   }
 
+  /**
+   * Create a message in a conversation
+   * 
+   * @param conversationId The ID of the conversation
+   * @param data The message data to create
+   * @param userId The ID of the user creating the message
+   * @returns The created conversation message
+   */
   async createConversationMessage(conversationId: string, data: CreateMessageData, userId: string): Promise<ConversationMessage> {
     const supabase = await createClient()
     
@@ -439,6 +525,14 @@ class ConversationService {
     return message
   }
 
+  /**
+   * Update a conversation message
+   * 
+   * @param messageId The ID of the message to update
+   * @param content The new content for the message
+   * @param userId The ID of the user updating the message
+   * @returns The updated conversation message
+   */
   async updateConversationMessage(messageId: number, content: string, userId: string): Promise<ConversationMessage> {
     const supabase = await createClient()
     
@@ -465,6 +559,12 @@ class ConversationService {
     return data
   }
 
+  /**
+   * Delete a conversation message
+   * 
+   * @param messageId The ID of the message to delete
+   * @param userId The ID of the user deleting the message
+   */
   async deleteConversationMessage(messageId: number, userId: string): Promise<void> {
     const supabase = await createClient()
     

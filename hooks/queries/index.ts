@@ -19,3 +19,6 @@ export * from './useSearchQueries'
 
 // Task management features hooks
 export * from './useTaskManagementQueries'
+
+// Conversation hooks
+export * from './useConversationQueries'

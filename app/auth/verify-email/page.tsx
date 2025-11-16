@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import React, { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -17,29 +17,64 @@ function VerifyEmailForm() {
   const email = searchParams.get('email')
   const isValidToken = !!token
 
-  // Simulate verification process
-  useState(() => {
-    if (isValidToken) {
-      const timer = setTimeout(() => {
-        // TODO: Implement actual verification with backend
+  // Handle actual email verification
+  React.useEffect(() => {
+    const verifyEmail = async () => {
+      if (token) {
+        try {
+          const { createClient } = await import('@/lib/supabase/client')
+          const supabase = createClient()
+          
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'email'
+          })
+          
+          setIsLoading(false)
+          if (error) {
+            console.error('Verification error:', error)
+            setIsVerified(false)
+          } else {
+            setIsVerified(true)
+          }
+        } catch (error) {
+          console.error('Verification error:', error)
+          setIsLoading(false)
+          setIsVerified(false)
+        }
+      } else {
         setIsLoading(false)
-        setIsVerified(true) // Simulate successful verification
-      }, 2000)
-      return () => clearTimeout(timer)
-    } else {
-      setIsLoading(false)
+      }
     }
-  })
+    
+    verifyEmail()
+  }, [token])
 
   const handleResendEmail = async () => {
-    setIsResending(true)
-    // TODO: Implement resend verification email
-    console.log("Resending verification email to:", email)
+    if (!email) return
     
-    setTimeout(() => {
+    setIsResending(true)
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
+      })
+      
+      if (error) {
+        console.error('Resend error:', error)
+        alert(`Error: ${error.message}`)
+      } else {
+        alert("Verification email has been resent!")
+      }
+    } catch (error) {
+      console.error('Resend error:', error)
+      alert("Error resending verification email")
+    } finally {
       setIsResending(false)
-      alert("Verification email has been resent!")
-    }, 2000)
+    }
   }
 
   // Loading state

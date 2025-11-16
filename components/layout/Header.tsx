@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth, useSignOut } from '@/hooks/queries/useAuthQueries'
+import { useAuthWithProfile } from '@/hooks/useAuth'
+import { useSignOut } from '@/hooks/queries/useAuthQueries'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -11,12 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { User, LogOut, Settings, Plus, Menu } from 'lucide-react'
+import { User, LogOut, Settings, Plus, Menu, Bell } from 'lucide-react'
 import { useState } from 'react'
 import { SearchBar } from '@/components/search/SearchBar'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 
 export default function Header() {
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuthWithProfile()
   const { mutate: signOut } = useSignOut()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -68,10 +70,18 @@ export default function Header() {
                       Tasks
                     </Button>
                   </Link>
+                  <Link href="/conversations">
+                    <Button variant="ghost" size="sm">
+                      Conversations
+                    </Button>
+                  </Link>
                 </nav>
 
                 {/* Search Bar */}
                 <SearchBar />
+
+                {/* Notifications */}
+                <NotificationBell />
 
                 <Button variant="outline" size="sm" className="ml-2">
                   <Plus className="h-4 w-4 mr-1" />
@@ -83,9 +93,16 @@ export default function Header() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name} />
+                        <AvatarImage 
+                          src={profile?.avatar_url || user?.user_metadata?.avatar_url} 
+                          alt={profile?.display_name || user?.user_metadata?.full_name} 
+                        />
                         <AvatarFallback className="bg-primary text-white">
-                          {getInitials(user.user_metadata?.full_name || user.email)}
+                          {getInitials(
+                            profile?.display_name || 
+                            user?.user_metadata?.full_name || 
+                            user?.email
+                          )}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -93,21 +110,27 @@ export default function Header() {
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <div className="flex flex-col space-y-1 p-2">
                       <p className="text-sm font-medium leading-none">
-                        {user.user_metadata?.full_name || 'User'}
+                        {profile?.display_name || user?.user_metadata?.full_name || 'User'}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
+                        {profile ? `@${profile.user_name}` : user?.email}
                       </p>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/profile">
+                      <Link href={profile ? `/profiles/${profile.user_name}` : '/profile'}>
                         <User className="mr-2 h-4 w-4" />
                         Profile
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/settings">
+                      <Link href="/notifications">
+                        <Bell className="mr-2 h-4 w-4" />
+                        Notifications
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings/profile">
                         <Settings className="mr-2 h-4 w-4" />
                         Settings
                       </Link>
@@ -196,6 +219,13 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Tasks
+                  </Link>
+                  <Link
+                    href="/conversations"
+                    className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Conversations
                   </Link>
                   <Link
                     href="/profile"

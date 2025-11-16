@@ -23,17 +23,59 @@ export default function LoginPage() {
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       })
       
       if (error) {
         console.error('Login error:', error.message)
-        alert(error.message)
-      } else {
-        // Redirect to dashboard on success
-        window.location.href = '/dashboard'
+        
+        // Handle specific error cases
+        if (error.message.includes('Email not confirmed')) {
+          alert('Please verify your email address before signing in. Check your inbox for a verification link.')
+          window.location.href = `/auth/verify-required`
+        } else {
+          alert(error.message)
+        }
+      } else if (data.user) {
+        // Check if user's email is verified
+        if (!data.user.email_confirmed_at) {
+          alert('Please verify your email address before signing in. Check your inbox for a verification link.')
+          window.location.href = `/auth/verify-required`
+        } else {
+          // Check if user has a profile, create one if not
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .single()
+
+          if (!existingProfile) {
+            // Generate a username if none exists in metadata
+            const username = data.user.user_metadata.user_name || 
+                           data.user.email?.split('@')[0] || 
+                           `user_${data.user.id.substring(0, 8)}`
+
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                user_name: username,
+                display_name: data.user.user_metadata.full_name || null,
+                avatar_url: data.user.user_metadata.avatar_url || null,
+              })
+
+            if (profileError) {
+              console.error('Profile creation error:', profileError.message)
+              alert('Error creating user profile')
+              return
+            }
+          }
+
+          // Redirect to dashboard on success
+          window.location.href = '/dashboard'
+        }
       }
     } catch (error) {
       console.error('Unexpected error:', error)

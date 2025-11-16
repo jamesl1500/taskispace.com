@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { conversationService } from '@/lib/services/conversations-service'
+import { conversationService } from '@/lib/services/conversation-service'
 
 export async function GET() {
   try {
@@ -44,6 +44,15 @@ export async function POST(request: NextRequest) {
     if (!title && !description) {
       return NextResponse.json(
         { error: 'Title or description is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate that we have at least one other member besides the creator
+    const otherMembers = member_ids?.filter((id: string) => id !== user.id) || []
+    if (otherMembers.length === 0) {
+      return NextResponse.json(
+        { error: 'Conversations must include at least one other person besides yourself' },
         { status: 400 }
       )
     }
