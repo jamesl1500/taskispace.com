@@ -81,27 +81,45 @@ class ConversationService {
    * @returns The conversation with details or null if not found
    */
   async getConversation(conversationId: string, userId: string): Promise<ConversationWithDetails | null> {
+    // Validate input parameters
+    if (!conversationId || conversationId === 'undefined' || conversationId === 'null') {
+      throw new Error('Invalid conversation ID provided')
+    }
+    
+    if (!userId || userId === 'undefined' || userId === 'null') {
+      throw new Error('Invalid user ID provided')
+    }
+
     const supabase = await createClient()
     
     // First check if user is a member of this conversation
-    const { data: memberCheck } = await supabase
+    const { data: memberCheck, error: memberError } = await supabase
       .from('conversation_members')
-      .select('id')
+      .select('id, role')
       .eq('conversation_id', conversationId)
       .eq('user_id', userId)
       .maybeSingle()
+
+    if (memberError) {
+      console.error('Error checking conversation membership:', memberError)
+      throw new Error(`Failed to verify conversation access: ${memberError.message}`)
+    }
 
     if (!memberCheck) {
       throw new Error('Access denied: Not a member of this conversation')
     }
 
+    // Get conversation details
     const { data, error } = await supabase
       .from('conversations')
       .select('*')
       .eq('id', conversationId)
-      .single()
+      .maybeSingle()
 
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching conversation:', error)
+      throw error
+    }
 
     if (!data) return null
 

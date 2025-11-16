@@ -17,12 +17,14 @@ export async function GET(
       )
     }
 
+    const awaitedParams = await params;
+
     const url = new URL(request.url)
     const limit = parseInt(url.searchParams.get('limit') || '50')
     const offset = parseInt(url.searchParams.get('offset') || '0')
 
     const messages = await conversationService.getConversationMessages(
-      params.id,
+      awaitedParams.id,
       user.id,
       limit,
       offset
@@ -61,6 +63,8 @@ export async function POST(
       )
     }
 
+    const awaitedParams = await params;
+
     const body = await request.json()
     const { content, subject, attachments } = body
 
@@ -72,7 +76,7 @@ export async function POST(
     }
 
     const message = await conversationService.createConversationMessage(
-      params.id,
+      awaitedParams.id,
       { content, subject, attachments },
       user.id
     )

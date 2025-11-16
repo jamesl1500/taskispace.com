@@ -17,8 +17,10 @@ export async function GET(
       )
     }
 
+    const awaitedParams = await params;
+
     const members = await conversationService.getConversationMembers(
-      params.id,
+      awaitedParams.id,
       user.id
     )
 
@@ -55,6 +57,8 @@ export async function POST(
       )
     }
 
+    const awaitedParams = await params;
+
     const body = await request.json()
     const { user_id } = body
 
@@ -66,7 +70,7 @@ export async function POST(
     }
 
     const member = await conversationService.addConversationMember(
-      params.id,
+      awaitedParams.id,
       user_id,
       user.id
     )
@@ -103,6 +107,8 @@ export async function DELETE(
         { status: 401 }
       )
     }
+
+    const awaitedParams = await params;
 
     const url = new URL(request.url)
     const memberIdParam = url.searchParams.get('member_id')

@@ -17,7 +17,27 @@ export async function GET(
       )
     }
 
-    const conversation = await conversationService.getConversation(params.id, user.id)
+    const awaitedParams = await params;
+
+    // Validate conversation ID parameter
+    if (!awaitedParams.id || awaitedParams.id === 'undefined' || awaitedParams.id === 'null') {
+      return NextResponse.json(
+        { error: 'Invalid conversation ID' },
+        { status: 400 }
+      )
+    }
+
+    // Validate user ID
+    if (!user.id || user.id === 'undefined' || user.id === 'null') {
+      return NextResponse.json(
+        { error: 'Invalid user ID' },
+        { status: 400 }
+      )
+    }
+
+    console.log('Fetching conversation:', awaitedParams.id, 'for user:', user.id)
+
+    const conversation = await conversationService.getConversation(awaitedParams.id, user.id)
     
     if (!conversation) {
       return NextResponse.json(
@@ -38,7 +58,7 @@ export async function GET(
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + error },
       { status: 500 }
     )
   }
@@ -59,11 +79,29 @@ export async function PUT(
       )
     }
 
+    const awaitedParams = await params;
+
+    // Validate conversation ID parameter
+    if (!awaitedParams.id || awaitedParams.id === 'undefined' || awaitedParams.id === 'null') {
+      return NextResponse.json(
+        { error: 'Invalid conversation ID' },
+        { status: 400 }
+      )
+    }
+
+    // Validate user ID
+    if (!user.id || user.id === 'undefined' || user.id === 'null') {
+      return NextResponse.json(
+        { error: 'Invalid user ID' },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const { title, description } = body
 
     const conversation = await conversationService.updateConversation(
-      params.id,
+      awaitedParams.id,
       { title, description },
       user.id
     )
@@ -101,7 +139,25 @@ export async function DELETE(
       )
     }
 
-    await conversationService.deleteConversation(params.id, user.id)
+    const awaitedParams = await params;
+
+    // Validate conversation ID parameter
+    if (!awaitedParams.id || awaitedParams.id === 'undefined' || awaitedParams.id === 'null') {
+      return NextResponse.json(
+        { error: 'Invalid conversation ID' },
+        { status: 400 }
+      )
+    }
+
+    // Validate user ID
+    if (!user.id || user.id === 'undefined' || user.id === 'null') {
+      return NextResponse.json(
+        { error: 'Invalid user ID' },
+        { status: 400 }
+      )
+    }
+
+    await conversationService.deleteConversation(awaitedParams.id, user.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

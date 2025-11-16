@@ -33,45 +33,38 @@ export default function Header() {
 
   return (
     <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="flex justify-between items-center h-12">
           {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">T</span>
-              </div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-                TaskiSpace
-              </h1>
-            </Link>
-          </div>
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+              <span className="text-white font-bold text-xs">T</span>
+            </div>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white hidden sm:block">
+              TaskiSpace
+            </h1>
+          </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-2">
             {loading ? (
-              <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+              <div className="w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
             ) : user ? (
               // Authenticated User Navigation
               <>
-                <nav className="flex space-x-1">
+                <nav className="flex space-x-0.5">
                   <Link href="/dashboard">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="text-xs px-2">
                       Dashboard
                     </Button>
                   </Link>
-                  <Link href="/workspaces">
-                    <Button variant="ghost" size="sm">
-                      Workspaces
-                    </Button>
-                  </Link>
                   <Link href="/tasks">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="text-xs px-2">
                       Tasks
                     </Button>
                   </Link>
                   <Link href="/conversations">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="text-xs px-2">
                       Conversations
                     </Button>
                   </Link>
@@ -83,21 +76,21 @@ export default function Header() {
                 {/* Notifications */}
                 <NotificationBell />
 
-                <Button variant="outline" size="sm" className="ml-2">
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Task
+                <Button variant="outline" size="sm" className="text-xs px-2">
+                  <Plus className="h-3 w-3 mr-1" />
+                  New
                 </Button>
 
                 {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                      <Avatar className="h-10 w-10">
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
+                      <Avatar className="h-8 w-8">
                         <AvatarImage 
                           src={profile?.avatar_url || user?.user_metadata?.avatar_url} 
                           alt={profile?.display_name || user?.user_metadata?.full_name} 
                         />
-                        <AvatarFallback className="bg-primary text-white">
+                        <AvatarFallback className="bg-primary text-white text-xs">
                           {getInitials(
                             profile?.display_name || 
                             user?.user_metadata?.full_name || 
@@ -107,12 +100,12 @@ export default function Header() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <div className="flex flex-col space-y-1 p-2">
-                      <p className="text-sm font-medium leading-none">
+                  <DropdownMenuContent className="w-48" align="end" forceMount>
+                    <div className="p-2">
+                      <p className="text-sm font-medium truncate">
                         {profile?.display_name || user?.user_metadata?.full_name || 'User'}
                       </p>
-                      <p className="text-xs leading-none text-muted-foreground">
+                      <p className="text-xs text-muted-foreground truncate">
                         {profile ? `@${profile.user_name}` : user?.email}
                       </p>
                     </div>
@@ -145,14 +138,14 @@ export default function Header() {
               </>
             ) : (
               // Unauthenticated User Navigation
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
                 <Link href="/auth/login">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="text-xs">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button size="sm">
+                  <Button size="sm" className="text-xs">
                     Sign Up
                   </Button>
                 </Link>
@@ -161,82 +154,81 @@ export default function Header() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="lg:hidden flex items-center space-x-2">
+            {user && <NotificationBell />}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-1"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 dark:border-slate-700 py-4">
+          <div className="lg:hidden border-t border-slate-200 dark:border-slate-700 py-2">
             {loading ? (
-              <div className="flex justify-center py-4">
-                <div className="w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+              <div className="flex justify-center py-2">
+                <div className="w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
               </div>
             ) : user ? (
               // Authenticated Mobile Menu
-              <div className="space-y-2">
-                <div className="flex items-center space-x-3 px-3 py-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name} />
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2 px-3 py-1">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url} alt={profile?.display_name || user.user_metadata?.full_name} />
                     <AvatarFallback className="bg-primary text-white text-xs">
-                      {getInitials(user.user_metadata?.full_name || user.email)}
+                      {getInitials(profile?.display_name || user.user_metadata?.full_name || user.email)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
-                      {user.user_metadata?.full_name || 'User'}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {user.email}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                      {profile?.display_name || user.user_metadata?.full_name || 'User'}
                     </p>
                   </div>
                 </div>
-                <nav className="space-y-1">
+                <nav className="space-y-0.5">
                   <Link
                     href="/dashboard"
-                    className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Dashboard
                   </Link>
                   <Link
                     href="/workspaces"
-                    className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Workspaces
                   </Link>
                   <Link
                     href="/tasks"
-                    className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Tasks
                   </Link>
                   <Link
                     href="/conversations"
-                    className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Conversations
                   </Link>
                   <Link
-                    href="/profile"
-                    className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                    href="/notifications"
+                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Profile
+                    Notifications
                   </Link>
                   <Link
-                    href="/settings"
-                    className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                    href="/settings/profile"
+                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Settings
@@ -246,7 +238,7 @@ export default function Header() {
                       handleSignOut()
                       setMobileMenuOpen(false)
                     }}
-                    className="block w-full text-left px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                    className="block w-full text-left px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                   >
                     Sign out
                   </button>
@@ -254,17 +246,17 @@ export default function Header() {
               </div>
             ) : (
               // Unauthenticated Mobile Menu
-              <div className="space-y-2">
+              <div className="space-y-0.5">
                 <Link
                   href="/auth/login"
-                  className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                  className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="block px-3 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-sm font-medium"
+                  className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Sign Up
