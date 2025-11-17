@@ -1,8 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { AlertCircle, Mail, Loader2, CheckCircle } from "lucide-react"
 
 interface User {
@@ -10,39 +13,81 @@ interface User {
 }
 
 export default function VerifyRequiredPage() {
+  const searchParams = useSearchParams()
+  const emailParam = searchParams.get('email')
+  
   const [isResending, setIsResending] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [hasResent, setHasResent] = useState(false)
+  const [email, setEmail] = useState(emailParam || '')
 
   useEffect(() => {
     const getUser = async () => {
-      const { createClient } = await import('@/lib/supabase/client')
-      const supabase = createClient()
-      
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      try {
+        const { createClient } = await import('@/lib/supabase/client')
+        const supabase = createClient()
+        
+        console.log('Fetching user session...')
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          console.error('Error fetching session:', sessionError)
+          console.log('No valid session - allowing unauthenticated access')
+          return
+        }
+        
+        if (session?.user) {
+          console.log('User session found:', session.user)
+          setUser(session.user)
+          
+          // If user has email and no email param was provided, use user's email
+          if (session.user.email && !emailParam) {
+            setEmail(session.user.email)
+          }
+        } else {
+          console.log('No authenticated session - allowing unauthenticated access')
+        }
+      } catch (err) {
+        console.error('Error in getUser:', err)
+        console.log('Error occurred - allowing unauthenticated access')
+      }
     }
     
     getUser()
-  }, [])
+  }, [emailParam])
 
   const handleResendEmail = async () => {
-    if (!user?.email) return
+    console.log('Button clicked! Email:', email)
+    
+    if (!email || !email.trim()) {
+      alert('Please enter an email address.')
+      return
+    }
+    
+    if (!email.includes('@')) {
+      alert('Please enter a valid email address.')
+      return
+    }
     
     setIsResending(true)
+    
     try {
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
       
+      console.log('Starting resend process for:', email)
+      
+      console.log('Calling supabase.auth.resend...')
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: user.email
+        email: email.trim()
       })
       
       if (error) {
         console.error('Resend error:', error)
         alert(`Error: ${error.message}`)
       } else {
+        console.log('Resend successful!')
         setHasResent(true)
       }
     } catch (error) {
@@ -58,6 +103,10 @@ export default function VerifyRequiredPage() {
     const supabase = createClient()
     
     await supabase.auth.signOut()
+    window.location.href = '/auth/login'
+  }
+  
+  const handleGoToLogin = () => {
     window.location.href = '/auth/login'
   }
 
@@ -77,18 +126,28 @@ export default function VerifyRequiredPage() {
         
         <CardContent className="text-center space-y-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            We&apos;ve sent a verification email to:
+            {user ? 'Enter your email address to resend verification:' : 'Enter your email address to receive a verification email:'}
           </p>
-          {user?.email && (
-            <p className="font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded">
-              {user.email}
-            </p>
-          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-left block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Email address
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email address"
+              className="w-full"
+              disabled={isResending}
+            />
+          </div>
           
           {hasResent && (
             <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-2 rounded">
               <CheckCircle className="w-4 h-4" />
-              <span className="text-sm">Verification email sent!</span>
+              <span className="text-sm">Verification email sent to {email}!</span>
             </div>
           )}
           
@@ -100,8 +159,12 @@ export default function VerifyRequiredPage() {
         
         <CardFooter className="flex flex-col space-y-3">
           <Button
-            onClick={handleResendEmail}
-            disabled={isResending || hasResent}
+            onClick={(e) => {
+              e.preventDefault()
+              console.log('Button onClick triggered')
+              handleResendEmail()
+            }}
+            disabled={isResending || hasResent || !email.trim()}
             variant="outline"
             className="w-full"
           >
@@ -118,18 +181,28 @@ export default function VerifyRequiredPage() {
             ) : (
               <>
                 <Mail className="mr-2 h-4 w-4" />
-                Resend verification email
+                {user ? 'Resend verification email' : 'Send verification email'}
               </>
             )}
           </Button>
           
-          <Button
-            onClick={handleSignOut}
-            variant="ghost"
-            className="w-full text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-          >
-            Sign out and use different account
-          </Button>
+          {user ? (
+            <Button
+              onClick={handleSignOut}
+              variant="ghost"
+              className="w-full text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            >
+              Sign out and use different account
+            </Button>
+          ) : (
+            <Button
+              onClick={handleGoToLogin}
+              variant="ghost"
+              className="w-full text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            >
+              Already have an account? Sign in
+            </Button>
+          )}
         </CardFooter>
       </Card>
   )

@@ -12,6 +12,11 @@ import {
   CreateMessageData,
 } from "@/types/conversations";
 import { useAuth } from "./useAuthQueries";
+import { 
+  useConversationMessagesRealtime, 
+  useConversationRealtime,
+  useConversationMembersRealtime 
+} from "../useConversationRealtime";
 
 // Simple API helper to call Next.js route handlers
 async function api<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -55,6 +60,9 @@ export const useConversations = () => {
 export const useConversation = (id?: string) => {
   const { user, loading } = useAuth();
 
+  // Set up realtime subscription for this conversation
+  useConversationRealtime(id || '');
+
   return useQuery<Conversation, Error>({
     queryKey: ["conversation", id],
     queryFn: async () => {
@@ -75,6 +83,9 @@ export const useConversationMessages = (
   const { user, loading } = useAuth();
   const limit = opts?.limit ?? 50;
   const offset = opts?.offset ?? 0;
+
+  // Set up realtime subscription for this conversation's messages
+  useConversationMessagesRealtime(conversationId || '');
 
   return useQuery<ConversationMessageWithUser[], Error>({
     queryKey: ["conversation-messages", conversationId, limit, offset],
@@ -134,6 +145,9 @@ export const useCreateConversation = () => {
  */
 export const useConversationMembers = (conversationId?: string) => {
   const { user, loading } = useAuth();
+
+  // Set up realtime subscription for this conversation's members
+  useConversationMembersRealtime(conversationId || '');
 
   return useQuery({
     queryKey: ["conversation-members", conversationId],

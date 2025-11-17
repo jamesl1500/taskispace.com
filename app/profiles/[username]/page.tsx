@@ -20,8 +20,9 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <Card>
           <CardHeader>
             <div className="flex items-center space-x-4">
               <Skeleton className="h-20 w-20 rounded-full" />
@@ -40,14 +41,16 @@ export default function ProfilePage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     )
   }
 
   if (error || !profile) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <Card>
           <CardContent className="text-center py-12">
             <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Profile Not Found</h2>
@@ -61,6 +64,7 @@ export default function ProfilePage() {
             </Link>
           </CardContent>
         </Card>
+        </div>
       </div>
     )
   }
@@ -83,8 +87,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Card>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-4">
@@ -179,6 +184,7 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

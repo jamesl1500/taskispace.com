@@ -37,8 +37,9 @@ export default function ProfilesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Browse Profiles</h1>
         <p className="text-muted-foreground">
           Discover and connect with other users
@@ -143,6 +144,7 @@ export default function ProfilesPage() {
           Showing {profiles.length} result{profiles.length !== 1 ? 's' : ''} for &quot;{debouncedQuery}&quot;
         </div>
       )}
+    </div>
     </div>
   )
 }

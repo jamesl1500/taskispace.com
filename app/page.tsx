@@ -12,13 +12,13 @@ export default function Home() {
   ]
 
   const appPages = [
-    { title: "Dashboard", href: "/dashboard", description: "Overview of your tasks and workspaces" },
+    { title: "Timeline", href: "/timeline", description: "Your social feed and updates" },
     { title: "Workspaces", href: "/workspaces", description: "Create and manage your workspaces" },
     { title: "All Tasks", href: "/tasks", description: "View all tasks across workspaces" },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">

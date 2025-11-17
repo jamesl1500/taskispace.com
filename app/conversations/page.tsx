@@ -24,8 +24,9 @@ export default function ConversationPage() {
   };
 
   return (
-    <main className="p-4 max-w-4xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <main className="p-4 max-w-4xl mx-auto w-full">
+        <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Conversations</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
@@ -71,6 +72,7 @@ export default function ConversationPage() {
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
       />
-    </main>
+      </main>
+    </div>
   );
 }

@@ -12,10 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { User, LogOut, Settings, Plus, Menu, Bell } from 'lucide-react'
+import { User, LogOut, Settings, Plus, Menu, Bell, Bot } from 'lucide-react'
 import { useState } from 'react'
 import { SearchBar } from '@/components/search/SearchBar'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { Jarvis } from './Jarvis'
 
 export default function Header() {
   const { user, profile, loading } = useAuthWithProfile()
@@ -53,9 +54,9 @@ export default function Header() {
               // Authenticated User Navigation
               <>
                 <nav className="flex space-x-0.5">
-                  <Link href="/dashboard">
+                  <Link href="/timeline">
                     <Button variant="ghost" size="sm" className="text-xs px-2">
-                      Dashboard
+                      Timeline
                     </Button>
                   </Link>
                   <Link href="/tasks">
@@ -80,6 +81,9 @@ export default function Header() {
                   <Plus className="h-3 w-3 mr-1" />
                   New
                 </Button>
+
+                {/* Jarvis AI Bot */}
+                <Jarvis />
 
                 {/* User Menu */}
                 <DropdownMenu>
@@ -123,7 +127,7 @@ export default function Header() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/settings/profile">
+                      <Link href="/settings">
                         <Settings className="mr-2 h-4 w-4" />
                         Settings
                       </Link>
@@ -192,11 +196,11 @@ export default function Header() {
                 </div>
                 <nav className="space-y-0.5">
                   <Link
-                    href="/dashboard"
+                    href="/timeline"
                     className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Dashboard
+                    Timeline
                   </Link>
                   <Link
                     href="/workspaces"

@@ -34,7 +34,7 @@ export default function LoginPage() {
         // Handle specific error cases
         if (error.message.includes('Email not confirmed')) {
           alert('Please verify your email address before signing in. Check your inbox for a verification link.')
-          window.location.href = `/auth/verify-required`
+          window.location.href = `/auth/verify-required?email=` + encodeURIComponent(email)
         } else {
           alert(error.message)
         }
@@ -42,7 +42,7 @@ export default function LoginPage() {
         // Check if user's email is verified
         if (!data.user.email_confirmed_at) {
           alert('Please verify your email address before signing in. Check your inbox for a verification link.')
-          window.location.href = `/auth/verify-required`
+          window.location.href = `/auth/verify-required?email=` + encodeURIComponent(email)
         } else {
           // Check if user has a profile, create one if not
           const { data: existingProfile } = await supabase
@@ -73,8 +73,8 @@ export default function LoginPage() {
             }
           }
 
-          // Redirect to dashboard on success
-          window.location.href = '/dashboard'
+          // Redirect to timeline on success
+          window.location.href = '/timeline'
         }
       }
     } catch (error) {

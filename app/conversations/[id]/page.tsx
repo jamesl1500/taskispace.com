@@ -48,9 +48,10 @@ export default function ConversationPage() {
   const memberCount = members?.length || 0;
 
   return (
-    <main className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto w-full">
-      {/* Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <main className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto w-full">
+        {/* Header */}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-4">
           <Link href="/conversations">
             <Button variant="ghost" size="sm" className="gap-2">
@@ -162,6 +163,7 @@ export default function ConversationPage() {
           </Button>
         </div>
       </div>
-    </main>
+      </main>
+    </div>
   );
 }

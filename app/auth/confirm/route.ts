@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
     })
     
     if (!error) {
-      // redirect user to specified redirect URL or dashboard
-      const redirectTo = next === '/' ? '/dashboard' : next
+      // redirect user to specified redirect URL or timeline
+      const redirectTo = next === '/' ? '/timeline' : next
       return NextResponse.redirect(new URL(redirectTo, request.url))
     }
   }
