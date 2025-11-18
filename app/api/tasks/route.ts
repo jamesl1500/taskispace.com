@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { SubscriptionService } from '@/lib/services/subscription-service'
 
 export async function GET(request: NextRequest) {
   try {
@@ -75,6 +76,22 @@ export async function POST(request: NextRequest) {
 
     if (!title || !workspace_id || !list_id) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Check subscription limit for tasks
+    const subscriptionService = new SubscriptionService()
+    const limitCheck = await subscriptionService.checkLimit(user.id, 'maxTasks')
+
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: limitCheck.reason,
+          upgrade: true,
+          current: limitCheck.current,
+          limit: limitCheck.limit
+        },
+        { status: 403 }
+      )
     }
 
     // Verify user has access to the workspace
@@ -155,6 +172,9 @@ export async function POST(request: NextRequest) {
       console.error('Failed to log task activity:', activityError)
       // Don't fail the task creation if activity logging fails
     }
+
+    // Track usage for subscription limits
+    await subscriptionService.incrementUsage(user.id, 'tasks_created')
 
     return NextResponse.json(task)
   } catch (error) {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { friendshipService } from '@/lib/services/friendship-service'
+import { SubscriptionService } from '@/lib/services/subscription-service'
+import { createClient } from '@/lib/supabase/server'
 
 /**
  * GET /api/nudges
@@ -35,6 +37,29 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    // Check subscription limit for nudges per day
+    const subscriptionService = new SubscriptionService()
+    const limitCheck = await subscriptionService.checkLimit(user.id, 'maxNudgesPerDay')
+
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: limitCheck.reason,
+          upgrade: true,
+          current: limitCheck.current,
+          limit: limitCheck.limit
+        },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const { friendId, taskId, message } = body
 
@@ -43,6 +68,10 @@ export async function POST(request: NextRequest) {
     }
 
     const nudge = await friendshipService.sendNudge(friendId, taskId, message)
+    
+    // Track usage
+    await subscriptionService.incrementUsage(user.id, 'nudges_sent')
+
     return NextResponse.json(nudge)
   } catch (error) {
     console.error('Error in send nudge API:', error)

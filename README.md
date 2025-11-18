@@ -143,11 +143,11 @@ taskispace.com/
 
 ### Available Scripts
 
-- `pnpm dev` - Start development server
-- `pnpm build` - Build for production
-- `pnpm start` - Start production server
-- `pnpm lint` - Run ESLint
-- `pnpm type-check` - Run TypeScript compiler
+- `npm dev` - Start development server
+- `npm build` - Build for production
+- `npm start` - Start production server
+- `npm lint` - Run ESLint
+- `npm type-check` - Run TypeScript compiler
 
 ### API Endpoints
 

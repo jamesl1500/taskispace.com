@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { friendshipService } from '@/lib/services/friendship-service'
+import { SubscriptionService } from '@/lib/services/subscription-service'
+import { createClient } from '@/lib/supabase/server'
 
 /**
  * PATCH /api/friendships/[id]
@@ -23,7 +25,34 @@ export async function PATCH(
     }
 
     if (action === 'accept') {
+      // Check subscription limit for friends before accepting
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+      }
+
+      const subscriptionService = new SubscriptionService()
+      const limitCheck = await subscriptionService.checkLimit(user.id, 'maxFriends')
+
+      if (!limitCheck.allowed) {
+        return NextResponse.json(
+          { 
+            error: limitCheck.reason,
+            upgrade: true,
+            current: limitCheck.current,
+            limit: limitCheck.limit
+          },
+          { status: 403 }
+        )
+      }
+
       const friendship = await friendshipService.acceptFriendRequest(id)
+      
+      // Track usage
+      await subscriptionService.incrementUsage(user.id, 'friends_count')
+
       return NextResponse.json(friendship)
     } else {
       const result = await friendshipService.rejectFriendRequest(id)
