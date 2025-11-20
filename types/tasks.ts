@@ -127,7 +127,8 @@ export interface CreateTaskData {
   status?: TaskStatus
   priority?: TaskPriority
   list_id: string
-  assignee?: string
+  assignee_id?: string
+  tags?: string[]
   due_date?: string
 }
 
