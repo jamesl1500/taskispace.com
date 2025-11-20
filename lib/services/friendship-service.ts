@@ -6,7 +6,7 @@
  * @module services/friendship-service
  */
 import { createClient } from '@/lib/supabase/server'
-import type { Friendship, Nudge, FriendRequest, FriendWithStats } from '@/types/friendships'
+import type { Nudge, FriendRequest, FriendWithStats } from '@/types/friendships'
 
 export class FriendshipService {
   /**
@@ -170,7 +170,7 @@ export class FriendshipService {
       to_user_id: r.friend_id,
       status: r.status as 'pending',
       created_at: r.created_at,
-      from_user_profile: r.from_user_profile as any
+      from_user_profile: r.from_user_profile as Record<string, unknown>
     })) || []
   }
 

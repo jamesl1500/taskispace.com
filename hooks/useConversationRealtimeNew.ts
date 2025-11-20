@@ -2,7 +2,7 @@
  * Real-time conversation hooks using Supabase subscriptions
  * Integrates with React Query for seamless cache updates
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { ConversationMessage, ConversationMessageWithUser } from '@/types/conversations'

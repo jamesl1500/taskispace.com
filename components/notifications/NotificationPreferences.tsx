@@ -17,7 +17,7 @@ export function NotificationPreferences() {
         [key]: value
       });
       toast.success('Preferences updated');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update preferences');
     }
   };

@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Check environment variables first
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

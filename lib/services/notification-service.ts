@@ -191,7 +191,7 @@ export class NotificationService {
       .single();
 
     if (error) throw error;
-    return data ? (data as any)[key] : null;
+    return data ? (data as unknown as Record<string, unknown>)[key] as NotificationPreferences[K] : null;
   }
 
   // Update notification preferences

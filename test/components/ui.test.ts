@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 describe('UI Component Tests', () => {
   describe('Button Component', () => {
@@ -282,7 +282,6 @@ describe('UI Component Tests', () => {
     })
 
     it('should handle dashboard card order', () => {
-      const defaultOrder = ['recent', 'overdue', 'upcoming']
       const newOrder = ['upcoming', 'recent', 'overdue']
 
       const storage: Record<string, string> = {}

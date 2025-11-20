@@ -81,14 +81,14 @@ describe('components/notifications/NotificationBell', () => {
     })
 
     it('should have dropdown menu trigger', () => {
-      const { container } = render(<NotificationBell />)
+      render(<NotificationBell />)
       
       const button = screen.getByRole('button')
       expect(button).toBeDefined()
     })
 
     it('should render with ghost variant button', () => {
-      const { container } = render(<NotificationBell />)
+      render(<NotificationBell />)
       
       const button = screen.getByRole('button')
       expect(button.className).toContain('relative')

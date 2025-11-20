@@ -5,7 +5,7 @@ import type { NotificationFilters, NotificationType } from '@/types/notification
 // Mock Supabase client
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
-    from: vi.fn((table: string) => ({
+    from: vi.fn(() => ({
       select: vi.fn(() => ({
         order: vi.fn(() => ({
           in: vi.fn(() => ({

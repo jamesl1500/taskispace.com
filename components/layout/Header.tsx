@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { User, LogOut, Settings, Plus, Menu, Bell, Bot } from 'lucide-react'
+import { User, LogOut, Settings, Plus, Menu, Bell } from 'lucide-react'
 import { useState } from 'react'
 import { SearchBar } from '@/components/search/SearchBar'
 import { NotificationBell } from '@/components/notifications/NotificationBell'

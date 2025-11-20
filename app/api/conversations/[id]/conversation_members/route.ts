@@ -108,7 +108,7 @@ export async function DELETE(
       )
     }
 
-    const awaitedParams = await params;
+    await params;
 
     const url = new URL(request.url)
     const memberIdParam = url.searchParams.get('member_id')

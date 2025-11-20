@@ -41,32 +41,32 @@ export function ConversationMessages({ conversationId }: ConversationMessagesPro
   }
 
   return (
-    <div className=\"flex flex-col h-full\">
+    <div className="flex flex-col h-full">
       {/* Messages list - automatically updates with realtime */}
-      <div className=\"flex-1 overflow-y-auto p-4 space-y-2\">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {messages?.map((message) => (
-          <Card key={message.id} className=\"p-3\">
-            <div className=\"text-sm text-gray-500\">
+          <Card key={message.id} className="p-3">
+            <div className="text-sm text-gray-500">
               {message.user.email || 'Unknown user'} • {new Date(message.created_at).toLocaleTimeString()}
             </div>
-            <div className=\"mt-1\">{message.content}</div>
+            <div className="mt-1">{message.content}</div>
           </Card>
         ))}
         
         {messages?.length === 0 && (
-          <div className=\"text-center text-gray-500 py-8\">
+          <div className="text-center text-gray-500 py-8">
             No messages yet. Send the first message!
           </div>
         )}
       </div>
 
       {/* Message input */}
-      <div className=\"border-t p-4\">
-        <div className=\"flex gap-2\">
+      <div className="border-t p-4">
+        <div className="flex gap-2">
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder=\"Type a message...\"
+            placeholder="Type a message..."
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()

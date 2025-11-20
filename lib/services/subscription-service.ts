@@ -442,11 +442,11 @@ export class SubscriptionService {
       .from('subscriptions')
       .update({
         status: stripeSubscription.status as Subscription['status'],
-        current_period_start: (stripeSubscription as any).current_period_start
-          ? new Date((stripeSubscription as any).current_period_start * 1000).toISOString()
+        current_period_start: 'current_period_start' in stripeSubscription && typeof stripeSubscription.current_period_start === 'number'
+          ? new Date(stripeSubscription.current_period_start * 1000).toISOString()
           : null,
-        current_period_end: (stripeSubscription as any).current_period_end
-          ? new Date((stripeSubscription as any).current_period_end * 1000).toISOString()
+        current_period_end: 'current_period_end' in stripeSubscription && typeof stripeSubscription.current_period_end === 'number'
+          ? new Date(stripeSubscription.current_period_end * 1000).toISOString()
           : null,
         cancel_at_period_end: stripeSubscription.cancel_at_period_end,
         canceled_at: stripeSubscription.canceled_at ? new Date(stripeSubscription.canceled_at * 1000).toISOString() : null,
@@ -505,12 +505,13 @@ export class SubscriptionService {
    */
   private async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
     const supabase = supabaseAdminClient() // Use admin client to bypass RLS
-    if (!invoice.subscription) return
+    const subscriptionId = 'subscription' in invoice && typeof invoice.subscription === 'string' ? invoice.subscription : null
+    if (!subscriptionId) return
 
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('stripe_subscription_id', invoice.subscription as string)
+      .eq('stripe_subscription_id', subscriptionId as string)
       .single()
 
     if (!subscription) return
@@ -526,18 +527,18 @@ export class SubscriptionService {
       .or('metric_name.eq.jarvis_conversations,metric_name.eq.jarvis_tokens')
       .gte('period_start', periodStart)
   }
-
   /**
    * Handle failed payment
    */
   private async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
     const supabase = supabaseAdminClient() // Use admin client to bypass RLS
-    if (!invoice.subscription) return
+    const subscriptionId = 'subscription' in invoice && typeof invoice.subscription === 'string' ? invoice.subscription : null
+    if (!subscriptionId) return
 
     const { error } = await supabase
       .from('subscriptions')
       .update({ status: 'past_due' })
-      .eq('stripe_subscription_id', invoice.subscription as string)
+      .eq('stripe_subscription_id', subscriptionId as string)
 
     if (error) {
       console.error('Error updating subscription status to past_due:', error)

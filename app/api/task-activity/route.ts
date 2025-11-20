@@ -13,9 +13,6 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const task_id = searchParams.get('task_id')
-    const limit = searchParams.get('limit')
-    const offset = searchParams.get('offset')
-    const activity_type = searchParams.get('type')
 
     if (!task_id) {
       console.log('GET task-activity: Missing task_id parameter')

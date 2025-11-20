@@ -12,7 +12,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    const diagnostics: any = {
+    const diagnostics: {
+      timestamp: string;
+      checks: Record<string, unknown>;
+    } = {
       timestamp: new Date().toISOString(),
       checks: {}
     }

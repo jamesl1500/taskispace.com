@@ -12,7 +12,7 @@
  */
 import { OpenAI } from 'openai'
 import { createClient } from '@/lib/supabase/server'
-import type { JarvisConversation, JarvisMessage, JarvisConversationWithMessages } from '@/types/jarvis'
+import type { JarvisConversation, JarvisConversationWithMessages } from '@/types/jarvis'
 
 export class JarvisService {
   private openai: OpenAI

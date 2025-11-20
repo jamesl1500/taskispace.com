@@ -6,7 +6,6 @@
  * @module services/posts-service
  */
 import { createClient } from '@/lib/supabase/server'
-import type { Post } from '@/types/posts'
 
 export class PostsService {
   /**

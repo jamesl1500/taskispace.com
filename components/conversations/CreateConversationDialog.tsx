@@ -65,8 +65,11 @@ export function CreateConversationDialog({ open, onOpenChange, preSelectedUser }
           toast.error("You cannot start a conversation with yourself")
           return
         }
-        setSelectedUsers([foundUser])
-        setTitle(`Chat with ${foundUser.display_name || foundUser.user_name}`)
+        // Use setTimeout to defer state updates to avoid cascading renders
+        setTimeout(() => {
+          setSelectedUsers([foundUser])
+          setTitle(`Chat with ${foundUser.display_name || foundUser.user_name}`)
+        }, 0)
       }
     }
   }, [preSelectedUser, searchResults, open, selectedUsers, user])
