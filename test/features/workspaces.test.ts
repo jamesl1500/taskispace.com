@@ -1,320 +1,151 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock workspace functions
-const mockCreateWorkspace = vi.fn()
-const mockUpdateWorkspace = vi.fn()
-const mockDeleteWorkspace = vi.fn()
-const mockUseWorkspaces = vi.fn()
-const mockUseWorkspace = vi.fn()
+global.fetch = vi.fn()
+const mockFetch = global.fetch as ReturnType<typeof vi.fn>
 
-// Mock workspace queries
-vi.mock('@/hooks/queries/useWorkspaceQueries', () => ({
-  useWorkspaces: () => mockUseWorkspaces(),
-  useWorkspace: () => mockUseWorkspace(),
-  useCreateWorkspace: () => ({ 
-    mutate: mockCreateWorkspace,
-    isPending: false,
-    error: null 
-  }),
-  useUpdateWorkspace: () => ({ 
-    mutate: mockUpdateWorkspace,
-    isPending: false,
-    error: null 
-  }),
-  useDeleteWorkspace: () => ({ 
-    mutate: mockDeleteWorkspace,
-    isPending: false,
-    error: null 
-  }),
-}))
-
-describe('Workspace Management', () => {
+describe('Workspaces Management', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockFetch.mockReset()
   })
 
-  describe('Workspace Listing', () => {
-    it('should fetch user workspaces', () => {
-      const mockWorkspaces = [
-        {
-          id: '1',
-          name: 'Personal Workspace',
-          description: 'My personal tasks',
-          owner_id: 'user1',
-          created_at: '2024-01-01',
-          color: '#3B82F6'
-        },
-        {
-          id: '2',
-          name: 'Team Workspace',
-          description: 'Shared team tasks',
-          owner_id: 'user1',
-          created_at: '2024-01-02',
-          color: '#10B981'
-        }
-      ]
-
-      mockUseWorkspaces.mockReturnValue({
-        data: mockWorkspaces,
-        isLoading: false,
-        error: null
-      })
-
-      const result = mockUseWorkspaces()
-      expect(result.data).toEqual(mockWorkspaces)
-      expect(result.data).toHaveLength(2)
-    })
-
-    it('should handle empty workspace list', () => {
-      mockUseWorkspaces.mockReturnValue({
-        data: [],
-        isLoading: false,
-        error: null
-      })
-
-      const result = mockUseWorkspaces()
-      expect(result.data).toEqual([])
-    })
-
-    it('should handle workspace loading state', () => {
-      mockUseWorkspaces.mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        error: null
-      })
-
-      const result = mockUseWorkspaces()
-      expect(result.isLoading).toBe(true)
-    })
-
-    it('should handle workspace fetch errors', () => {
-      const mockError = { message: 'Failed to fetch workspaces' }
-      mockUseWorkspaces.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        error: mockError
-      })
-
-      const result = mockUseWorkspaces()
-      expect(result.error).toEqual(mockError)
-    })
-  })
-
-  describe('Individual Workspace', () => {
-    it('should fetch single workspace by ID', () => {
-      const mockWorkspace = {
-        id: '1',
-        name: 'Test Workspace',
-        description: 'Test description',
-        owner_id: 'user1',
-        created_at: '2024-01-01',
-        color: '#3B82F6'
-      }
-
-      mockUseWorkspace.mockReturnValue({
-        data: mockWorkspace,
-        isLoading: false,
-        error: null
-      })
-
-      const result = mockUseWorkspace()
-      expect(result.data).toEqual(mockWorkspace)
-    })
-
-    it('should handle workspace not found', () => {
-      mockUseWorkspace.mockReturnValue({
-        data: null,
-        isLoading: false,
-        error: { message: 'Workspace not found' }
-      })
-
-      const result = mockUseWorkspace()
-      expect(result.data).toBeNull()
-      expect(result.error?.message).toBe('Workspace not found')
-    })
-  })
-
-  describe('Workspace Creation', () => {
-    it('should create new workspace', async () => {
-      const newWorkspaceData = {
-        name: 'New Workspace',
-        description: 'A brand new workspace',
-        color: '#8B5CF6'
-      }
-
-      const createdWorkspace = {
-        id: '3',
-        ...newWorkspaceData,
-        owner_id: 'user1',
-        created_at: '2024-01-03'
-      }
-
-      mockCreateWorkspace.mockResolvedValue(createdWorkspace)
-
-      const result = await mockCreateWorkspace(newWorkspaceData)
-      
-      expect(mockCreateWorkspace).toHaveBeenCalledWith(newWorkspaceData)
-      expect(result).toEqual(createdWorkspace)
-    })
-
-    it('should handle workspace creation failure', async () => {
-      const newWorkspaceData = {
-        name: 'Invalid Workspace',
-        description: '',
-        color: '#000000'
-      }
-
-      const mockError = new Error('Failed to create workspace')
-      mockCreateWorkspace.mockRejectedValue(mockError)
-
-      try {
-        await mockCreateWorkspace(newWorkspaceData)
-      } catch (error) {
-        expect(error).toEqual(mockError)
-      }
-    })
-
-    it('should validate required fields', async () => {
-      const invalidData = {
-        name: '', // Empty name should fail
-        description: 'Test description',
-        color: '#3B82F6'
-      }
-
-      const mockError = new Error('Name is required')
-      mockCreateWorkspace.mockRejectedValue(mockError)
-
-      try {
-        await mockCreateWorkspace(invalidData)
-      } catch (error) {
-        expect(error).toEqual(mockError)
-      }
-    })
-  })
-
-  describe('Workspace Updates', () => {
-    it('should update workspace details', async () => {
-      const workspaceId = '1'
-      const updateData = {
-        name: 'Updated Workspace Name',
-        description: 'Updated description',
-        color: '#EC4899'
-      }
-
-      const updatedWorkspace = {
-        id: workspaceId,
-        ...updateData,
-        owner_id: 'user1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-03'
-      }
-
-      mockUpdateWorkspace.mockResolvedValue(updatedWorkspace)
-
-      const result = await mockUpdateWorkspace({ id: workspaceId, ...updateData })
-      
-      expect(mockUpdateWorkspace).toHaveBeenCalledWith({ id: workspaceId, ...updateData })
-      expect(result).toEqual(updatedWorkspace)
-    })
-
-    it('should handle partial updates', async () => {
-      const workspaceId = '1'
-      const updateData = {
-        name: 'Just Name Update'
-      }
-
-      const updatedWorkspace = {
-        id: workspaceId,
-        name: updateData.name,
-        description: 'Original description',
+  describe('Workspace CRUD', () => {
+    it('should create a workspace', async () => {
+      const workspace = {
+        name: 'Development Team',
+        description: 'Main dev workspace',
         color: '#3B82F6',
-        owner_id: 'user1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-03'
+        icon: '💼',
       }
 
-      mockUpdateWorkspace.mockResolvedValue(updatedWorkspace)
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ workspace: { id: 'ws-1', ...workspace } }),
+      } as Response)
 
-      const result = await mockUpdateWorkspace({ id: workspaceId, ...updateData })
-      
-      expect(result.name).toBe(updateData.name)
+      const response = await fetch('/api/workspaces', {
+        method: 'POST',
+        body: JSON.stringify(workspace),
+      })
+
+      const result = await response.json()
+      expect(result.workspace.name).toBe('Development Team')
+      expect(result.workspace.id).toBeDefined()
     })
 
-    it('should handle update failures', async () => {
-      const workspaceId = '999'
-      const updateData = { name: 'Non-existent Workspace' }
+    it('should fetch all workspaces', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          workspaces: [
+            { id: 'ws-1', name: 'Workspace 1' },
+            { id: 'ws-2', name: 'Workspace 2' },
+          ],
+        }),
+      } as Response)
 
-      const mockError = new Error('Workspace not found')
-      mockUpdateWorkspace.mockRejectedValue(mockError)
+      const response = await fetch('/api/workspaces')
+      const result = await response.json()
 
-      try {
-        await mockUpdateWorkspace({ id: workspaceId, ...updateData })
-      } catch (error) {
-        expect(error).toEqual(mockError)
-      }
+      expect(result.workspaces).toHaveLength(2)
     })
-  })
 
-  describe('Workspace Deletion', () => {
+    it('should update workspace', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          workspace: { id: 'ws-1', name: 'Updated Name' },
+        }),
+      } as Response)
+
+      const response = await fetch('/api/workspaces/ws-1', {
+        method: 'PATCH',
+        body: JSON.stringify({ name: 'Updated Name' }),
+      })
+
+      const result = await response.json()
+      expect(result.workspace.name).toBe('Updated Name')
+    })
+
     it('should delete workspace', async () => {
-      const workspaceId = '1'
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      } as Response)
 
-      mockDeleteWorkspace.mockResolvedValue({ success: true })
+      const response = await fetch('/api/workspaces/ws-1', { method: 'DELETE' })
+      const result = await response.json()
 
-      const result = await mockDeleteWorkspace(workspaceId)
-      
-      expect(mockDeleteWorkspace).toHaveBeenCalledWith(workspaceId)
       expect(result.success).toBe(true)
     })
+  })
 
-    it('should handle deletion of non-existent workspace', async () => {
-      const workspaceId = '999'
+  describe('Workspace Members', () => {
+    it('should add member to workspace', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          member: { workspace_id: 'ws-1', user_id: 'user-123', role: 'member' },
+        }),
+      } as Response)
 
-      const mockError = new Error('Workspace not found')
-      mockDeleteWorkspace.mockRejectedValue(mockError)
+      const response = await fetch('/api/workspaces/ws-1/members', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: 'user-123', role: 'member' }),
+      })
 
-      try {
-        await mockDeleteWorkspace(workspaceId)
-      } catch (error) {
-        expect(error).toEqual(mockError)
-      }
+      const result = await response.json()
+      expect(result.member.user_id).toBe('user-123')
     })
 
-    it('should prevent deletion of workspace with active tasks', async () => {
-      const workspaceId = '1'
+    it('should remove member from workspace', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      } as Response)
 
-      const mockError = new Error('Cannot delete workspace with active tasks')
-      mockDeleteWorkspace.mockRejectedValue(mockError)
+      const response = await fetch('/api/workspaces/ws-1/members/user-123', {
+        method: 'DELETE',
+      })
 
-      try {
-        await mockDeleteWorkspace(workspaceId)
-      } catch (error) {
-        expect(error).toEqual(mockError)
-      }
+      const result = await response.json()
+      expect(result.success).toBe(true)
     })
   })
 
-  describe('Workspace Access Control', () => {
-    it('should verify workspace ownership', () => {
-      const mockWorkspace = {
-        id: '1',
-        name: 'Test Workspace',
-        owner_id: 'user1'
-      }
+  describe('Workspace Lists', () => {
+    it('should create list in workspace', async () => {
+      const list = { name: 'Sprint Backlog', workspace_id: 'ws-1' }
 
-      // User should have access to their own workspace
-      expect(mockWorkspace.owner_id).toBe('user1')
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ list: { id: 'list-1', ...list } }),
+      } as Response)
+
+      const response = await fetch('/api/lists', {
+        method: 'POST',
+        body: JSON.stringify(list),
+      })
+
+      const result = await response.json()
+      expect(result.list.name).toBe('Sprint Backlog')
     })
 
-    it('should deny access to non-owned workspaces', () => {
-      const mockWorkspace = {
-        id: '1',
-        name: 'Test Workspace',
-        owner_id: 'user2'
-      }
+    it('should fetch workspace lists', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          lists: [
+            { id: 'list-1', name: 'To Do' },
+            { id: 'list-2', name: 'In Progress' },
+          ],
+        }),
+      } as Response)
 
-      // Current user 'user1' should not have access to 'user2' workspace
-      expect(mockWorkspace.owner_id).not.toBe('user1')
+      const response = await fetch('/api/lists?workspace_id=ws-1')
+      const result = await response.json()
+
+      expect(result.lists).toHaveLength(2)
     })
   })
 })

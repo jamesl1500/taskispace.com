@@ -1,638 +1,185 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Task type definition
-interface Task {
-  id: string
-  title: string
-  description?: string | null
-  status: string
-  priority: string
-  list_id: string
-  created_by: string
-  assignee?: string | null
-  due_date?: string | null
-  created_at: string
-  updated_at?: string
-  completed_at?: string
-}
+global.fetch = vi.fn()
+const mockFetch = global.fetch as ReturnType<typeof vi.fn>
 
-// Mock task functions
-const mockCreateTask = vi.fn()
-const mockUpdateTask = vi.fn()
-const mockDeleteTask = vi.fn()
-const mockToggleTaskStatus = vi.fn()
-const mockUseTasks = vi.fn()
-const mockUseTask = vi.fn()
-
-// Mock task queries
-vi.mock('@/hooks/queries/useTaskQueries', () => ({
-  useTasks: () => mockUseTasks(),
-  useTask: () => mockUseTask(),
-  useCreateTask: () => ({ 
-    mutate: mockCreateTask,
-    isPending: false,
-    error: null 
-  }),
-  useUpdateTask: () => ({ 
-    mutate: mockUpdateTask,
-    isPending: false,
-    error: null 
-  }),
-  useDeleteTask: () => ({ 
-    mutate: mockDeleteTask,
-    isPending: false,
-    error: null 
-  }),
-  useToggleTaskStatus: () => ({
-    mutate: mockToggleTaskStatus,
-    isPending: false,
-    error: null
-  })
-}))
-
-describe('Task Management', () => {
+describe('Tasks Management System', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockFetch.mockReset()
   })
 
-  describe('Task Listing', () => {
-    it('should fetch tasks for a workspace', () => {
+  describe('Task CRUD Operations', () => {
+    it('should create a new task with all fields', async () => {
+      const newTask = {
+        title: 'Complete project documentation',
+        description: 'Write comprehensive docs',
+        status: 'todo',
+        priority: 'high',
+        due_date: '2025-12-31',
+      }
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ task: { id: 'task-123', ...newTask } }),
+      } as Response)
+
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        body: JSON.stringify(newTask),
+      })
+
+      const result = await response.json()
+      expect(result.task.title).toBe(newTask.title)
+      expect(result.task.id).toBeDefined()
+    })
+
+    it('should fetch all user tasks', async () => {
       const mockTasks = [
-        {
-          id: '1',
-          title: 'Complete project setup',
-          description: 'Set up the initial project structure',
-          status: 'todo',
-          priority: 'high',
-          list_id: 'list1',
-          created_by: 'user1',
-          assignee: 'user1',
-          due_date: '2024-01-15',
-          created_at: '2024-01-01',
-          updated_at: '2024-01-01'
-        },
-        {
-          id: '2',
-          title: 'Write documentation',
-          description: 'Create comprehensive documentation',
-          status: 'in_progress',
-          priority: 'medium',
-          list_id: 'list1',
-          created_by: 'user1',
-          assignee: 'user2',
-          due_date: '2024-01-20',
-          created_at: '2024-01-02',
-          updated_at: '2024-01-02'
-        }
+        { id: 'task-1', title: 'Task 1', status: 'todo' },
+        { id: 'task-2', title: 'Task 2', status: 'completed' },
       ]
 
-      mockUseTasks.mockReturnValue({
-        data: mockTasks,
-        isLoading: false,
-        error: null
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ tasks: mockTasks }),
+      } as Response)
+
+      const response = await fetch('/api/tasks')
+      const result = await response.json()
+
+      expect(result.tasks).toHaveLength(2)
+    })
+
+    it('should update task status and priority', async () => {
+      const updates = { status: 'in_progress', priority: 'medium' }
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ task: { id: 'task-123', ...updates } }),
+      } as Response)
+
+      const response = await fetch('/api/tasks/task-123', {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
       })
 
-      const result = mockUseTasks()
-      expect(result.data).toEqual(mockTasks)
-      expect(result.data).toHaveLength(2)
+      const result = await response.json()
+      expect(result.task.status).toBe('in_progress')
     })
 
-    it('should handle empty task list', () => {
-      mockUseTasks.mockReturnValue({
-        data: [],
-        isLoading: false,
-        error: null
-      })
+    it('should delete a task', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      } as Response)
 
-      const result = mockUseTasks()
-      expect(result.data).toEqual([])
-    })
+      const response = await fetch('/api/tasks/task-123', { method: 'DELETE' })
+      const result = await response.json()
 
-    it('should handle task loading state', () => {
-      mockUseTasks.mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        error: null
-      })
-
-      const result = mockUseTasks()
-      expect(result.isLoading).toBe(true)
-    })
-
-    it('should filter tasks by status', () => {
-      const todoTasks = [
-        {
-          id: '1',
-          title: 'Todo Task',
-          status: 'todo',
-          priority: 'medium',
-          list_id: 'list1',
-          created_by: 'user1',
-          created_at: '2024-01-01'
-        }
-      ]
-
-      mockUseTasks.mockReturnValue({
-        data: todoTasks,
-        isLoading: false,
-        error: null
-      })
-
-      const result = mockUseTasks()
-      expect(result.data.every((task: Task) => task.status === 'todo')).toBe(true)
-    })
-
-    it('should filter tasks by priority', () => {
-      const highPriorityTasks = [
-        {
-          id: '1',
-          title: 'Urgent Task',
-          status: 'todo',
-          priority: 'high',
-          list_id: 'list1',
-          created_by: 'user1',
-          created_at: '2024-01-01'
-        }
-      ]
-
-      mockUseTasks.mockReturnValue({
-        data: highPriorityTasks,
-        isLoading: false,
-        error: null
-      })
-
-      const result = mockUseTasks()
-      expect(result.data.every((task: Task) => task.priority === 'high')).toBe(true)
-    })
-  })
-
-  describe('Individual Task', () => {
-    it('should fetch single task by ID', () => {
-      const mockTask = {
-        id: '1',
-        title: 'Test Task',
-        description: 'Test description',
-        status: 'todo',
-        priority: 'medium',
-        list_id: 'list1',
-        created_by: 'user1',
-        created_at: '2024-01-01'
-      }
-
-      mockUseTask.mockReturnValue({
-        data: mockTask,
-        isLoading: false,
-        error: null
-      })
-
-      const result = mockUseTask()
-      expect(result.data).toEqual(mockTask)
-    })
-
-    it('should handle task not found', () => {
-      mockUseTask.mockReturnValue({
-        data: null,
-        isLoading: false,
-        error: { message: 'Task not found' }
-      })
-
-      const result = mockUseTask()
-      expect(result.data).toBeNull()
-      expect(result.error?.message).toBe('Task not found')
-    })
-  })
-
-  describe('Task Creation', () => {
-    it('should create new task', async () => {
-      const newTaskData = {
-        title: 'New Task',
-        description: 'A brand new task',
-        priority: 'medium',
-        list_id: 'list1',
-        due_date: '2024-01-15'
-      }
-
-      const createdTask = {
-        id: '3',
-        ...newTaskData,
-        status: 'todo',
-        created_by: 'user1',
-        created_at: '2024-01-03',
-        updated_at: '2024-01-03'
-      }
-
-      mockCreateTask.mockResolvedValue(createdTask)
-
-      const result = await mockCreateTask(newTaskData)
-      
-      expect(mockCreateTask).toHaveBeenCalledWith(newTaskData)
-      expect(result).toEqual(createdTask)
-    })
-
-    it('should handle task creation failure', async () => {
-      const newTaskData = {
-        title: '',
-        description: 'No title task',
-        priority: 'medium',
-        list_id: 'list1'
-      }
-
-      const mockError = new Error('Title is required')
-      mockCreateTask.mockRejectedValue(mockError)
-
-      try {
-        await mockCreateTask(newTaskData)
-      } catch (error) {
-        expect(error).toEqual(mockError)
-      }
-    })
-
-    it('should set default values for optional fields', async () => {
-      const minimalTaskData = {
-        title: 'Minimal Task',
-        list_id: 'list1'
-      }
-
-      const createdTask = {
-        id: '4',
-        title: 'Minimal Task',
-        description: null,
-        status: 'todo',
-        priority: 'medium',
-        list_id: 'list1',
-        created_by: 'user1',
-        assignee: null,
-        due_date: null,
-        created_at: '2024-01-03',
-        updated_at: '2024-01-03'
-      }
-
-      mockCreateTask.mockResolvedValue(createdTask)
-
-      const result = await mockCreateTask(minimalTaskData)
-      
-      expect(result.status).toBe('todo')
-      expect(result.priority).toBe('medium')
-    })
-  })
-
-  describe('Task Updates', () => {
-    it('should update task details', async () => {
-      const taskId = '1'
-      const updateData = {
-        title: 'Updated Task Title',
-        description: 'Updated description',
-        priority: 'high'
-      }
-
-      const updatedTask = {
-        id: taskId,
-        ...updateData,
-        status: 'todo',
-        list_id: 'list1',
-        created_by: 'user1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-03'
-      }
-
-      mockUpdateTask.mockResolvedValue(updatedTask)
-
-      const result = await mockUpdateTask({ id: taskId, ...updateData })
-      
-      expect(mockUpdateTask).toHaveBeenCalledWith({ id: taskId, ...updateData })
-      expect(result).toEqual(updatedTask)
-    })
-
-    it('should handle partial updates', async () => {
-      const taskId = '1'
-      const updateData = {
-        status: 'in_progress'
-      }
-
-      const updatedTask = {
-        id: taskId,
-        title: 'Original Title',
-        description: 'Original description',
-        status: 'in_progress',
-        priority: 'medium',
-        list_id: 'list1',
-        created_by: 'user1',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-03'
-      }
-
-      mockUpdateTask.mockResolvedValue(updatedTask)
-
-      const result = await mockUpdateTask({ id: taskId, ...updateData })
-      
-      expect(result.status).toBe('in_progress')
-    })
-
-    it('should update due date', async () => {
-      const taskId = '1'
-      const updateData = {
-        due_date: '2024-01-20'
-      }
-
-      const updatedTask = {
-        id: taskId,
-        title: 'Task with Due Date',
-        status: 'todo',
-        priority: 'medium',
-        list_id: 'list1',
-        created_by: 'user1',
-        due_date: '2024-01-20',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-03'
-      }
-
-      mockUpdateTask.mockResolvedValue(updatedTask)
-
-      const result = await mockUpdateTask({ id: taskId, ...updateData })
-      
-      expect(result.due_date).toBe('2024-01-20')
-    })
-
-    it('should assign task to user', async () => {
-      const taskId = '1'
-      const updateData = {
-        assignee: 'user2'
-      }
-
-      const updatedTask = {
-        id: taskId,
-        title: 'Assigned Task',
-        status: 'todo',
-        priority: 'medium',
-        list_id: 'list1',
-        created_by: 'user1',
-        assignee: 'user2',
-        created_at: '2024-01-01',
-        updated_at: '2024-01-03'
-      }
-
-      mockUpdateTask.mockResolvedValue(updatedTask)
-
-      const result = await mockUpdateTask({ id: taskId, ...updateData })
-      
-      expect(result.assignee).toBe('user2')
-    })
-  })
-
-  describe('Task Status Management', () => {
-    it('should toggle task status', async () => {
-      const taskId = '1'
-
-      const toggledTask = {
-        id: taskId,
-        title: 'Task to Toggle',
-        status: 'completed',
-        priority: 'medium',
-        list_id: 'list1',
-        created_by: 'user1',
-        completed_at: '2024-01-03',
-        updated_at: '2024-01-03'
-      }
-
-      mockToggleTaskStatus.mockResolvedValue(toggledTask)
-
-      const result = await mockToggleTaskStatus(taskId)
-      
-      expect(mockToggleTaskStatus).toHaveBeenCalledWith(taskId)
-      expect(result.status).toBe('completed')
-      expect(result.completed_at).toBeDefined()
-    })
-
-    it('should handle status transitions', async () => {
-      const taskId = '1'
-      
-      // Test todo -> in_progress
-      let updatedTask: Partial<Task> = {
-        id: taskId,
-        status: 'in_progress',
-        updated_at: '2024-01-03'
-      }
-
-      mockToggleTaskStatus.mockResolvedValue(updatedTask)
-      let result = await mockToggleTaskStatus(taskId)
-      expect(result.status).toBe('in_progress')
-
-      // Test in_progress -> completed
-      updatedTask = {
-        id: taskId,
-        status: 'completed',
-        completed_at: '2024-01-03',
-        updated_at: '2024-01-03'
-      }
-
-      mockToggleTaskStatus.mockResolvedValue(updatedTask)
-      result = await mockToggleTaskStatus(taskId)
-      expect(result.status).toBe('completed')
-    })
-  })
-
-  describe('Task Deletion', () => {
-    it('should delete task', async () => {
-      const taskId = '1'
-
-      mockDeleteTask.mockResolvedValue({ success: true })
-
-      const result = await mockDeleteTask(taskId)
-      
-      expect(mockDeleteTask).toHaveBeenCalledWith(taskId)
       expect(result.success).toBe(true)
     })
+  })
 
-    it('should handle deletion of non-existent task', async () => {
-      const taskId = '999'
+  describe('Task Filtering', () => {
+    it('should filter by status', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          tasks: [{ id: 'task-1', status: 'completed' }],
+        }),
+      } as Response)
 
-      const mockError = new Error('Task not found')
-      mockDeleteTask.mockRejectedValue(mockError)
+      const response = await fetch('/api/tasks?status=completed')
+      const result = await response.json()
 
-      try {
-        await mockDeleteTask(taskId)
-      } catch (error) {
-        expect(error).toEqual(mockError)
-      }
+      expect(result.tasks[0].status).toBe('completed')
     })
 
-    it('should prevent deletion by non-authorized users', async () => {
-      const taskId = '1'
+    it('should get overdue tasks', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          tasks: [{ id: 'task-1', due_date: '2025-01-01', status: 'todo' }],
+        }),
+      } as Response)
 
-      const mockError = new Error('Access denied')
-      mockDeleteTask.mockRejectedValue(mockError)
+      const response = await fetch('/api/tasks?overdue=true')
+      const result = await response.json()
 
-      try {
-        await mockDeleteTask(taskId)
-      } catch (error) {
-        expect(error).toEqual(mockError)
-      }
+      expect(result.tasks).toBeDefined()
     })
   })
 
-  describe('Task Search and Filtering', () => {
-    it('should search tasks by title', () => {
-      const searchResults = [
-        {
-          id: '1',
-          title: 'Setup Task',
-          description: 'Task related to setup',
-          status: 'todo',
-          priority: 'medium',
-          list_id: 'list1',
-          created_by: 'user1',
-          created_at: '2024-01-01'
-        }
-      ]
+  describe('Subtasks', () => {
+    it('should create subtask', async () => {
+      const subtask = { task_id: 'task-123', title: 'Subtask 1' }
 
-      mockUseTasks.mockReturnValue({
-        data: searchResults,
-        isLoading: false,
-        error: null
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ subtask: { id: 'sub-1', ...subtask } }),
+      } as Response)
+
+      const response = await fetch('/api/subtasks', {
+        method: 'POST',
+        body: JSON.stringify(subtask),
       })
 
-      const result = mockUseTasks()
-      expect(result.data.every((task: Task) => 
-        task.title.toLowerCase().includes('setup') || 
-        task.description?.toLowerCase().includes('setup')
-      )).toBe(true)
+      const result = await response.json()
+      expect(result.subtask.title).toBe('Subtask 1')
     })
 
-    it('should filter by assignee', () => {
-      const assignedTasks = [
-        {
-          id: '1',
-          title: 'User Task',
-          assignee: 'user1',
-          status: 'todo',
-          priority: 'medium',
-          list_id: 'list1',
-          created_by: 'user1',
-          created_at: '2024-01-01'
-        }
-      ]
+    it('should toggle subtask completion', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ subtask: { id: 'sub-1', completed: true } }),
+      } as Response)
 
-      mockUseTasks.mockReturnValue({
-        data: assignedTasks,
-        isLoading: false,
-        error: null
+      const response = await fetch('/api/subtasks/sub-1', {
+        method: 'PATCH',
+        body: JSON.stringify({ completed: true }),
       })
 
-      const result = mockUseTasks()
-      expect(result.data.every((task: Task) => task.assignee === 'user1')).toBe(true)
-    })
-
-    it('should filter by due date range', () => {
-      const dueSoonTasks = [
-        {
-          id: '1',
-          title: 'Due Soon Task',
-          due_date: '2024-01-15',
-          status: 'todo',
-          priority: 'medium',
-          list_id: 'list1',
-          created_by: 'user1',
-          created_at: '2024-01-01'
-        }
-      ]
-
-      mockUseTasks.mockReturnValue({
-        data: dueSoonTasks,
-        isLoading: false,
-        error: null
-      })
-
-      const result = mockUseTasks()
-      expect(result.data.every((task: Task) => task.due_date && task.due_date <= '2024-01-20')).toBe(true)
+      const result = await response.json()
+      expect(result.subtask.completed).toBe(true)
     })
   })
 
-  describe('Task Sorting', () => {
-    it('should sort tasks by created date', () => {
-      const sortedTasks = [
-        {
-          id: '2',
-          title: 'Newer Task',
-          created_at: '2024-01-02',
-          status: 'todo'
-        },
-        {
-          id: '1',
-          title: 'Older Task',
-          created_at: '2024-01-01',
-          status: 'todo'
-        }
-      ]
+  describe('Task Comments', () => {
+    it('should add comment', async () => {
+      const comment = { task_id: 'task-123', content: 'Great work!' }
 
-      mockUseTasks.mockReturnValue({
-        data: sortedTasks,
-        isLoading: false,
-        error: null
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ comment: { id: 'c-1', ...comment } }),
+      } as Response)
+
+      const response = await fetch('/api/task-comments', {
+        method: 'POST',
+        body: JSON.stringify(comment),
       })
 
-      const result = mockUseTasks()
-      expect(new Date(result.data[0].created_at) >= new Date(result.data[1].created_at)).toBe(true)
+      const result = await response.json()
+      expect(result.comment.content).toBe('Great work!')
     })
+  })
 
-    it('should sort tasks by priority', () => {
-      const prioritySortedTasks = [
-        {
-          id: '1',
-          title: 'High Priority',
-          priority: 'high',
-          status: 'todo'
-        },
-        {
-          id: '2',
-          title: 'Medium Priority',
-          priority: 'medium',
-          status: 'todo'
-        },
-        {
-          id: '3',
-          title: 'Low Priority',
-          priority: 'low',
-          status: 'todo'
-        }
-      ]
+  describe('Task Collaborators', () => {
+    it('should add collaborator', async () => {
+      const collab = { task_id: 'task-123', user_id: 'user-456' }
 
-      mockUseTasks.mockReturnValue({
-        data: prioritySortedTasks,
-        isLoading: false,
-        error: null
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ collaborator: collab }),
+      } as Response)
+
+      const response = await fetch('/api/task-collaborators', {
+        method: 'POST',
+        body: JSON.stringify(collab),
       })
 
-      const result = mockUseTasks()
-      const priorities = ['high', 'medium', 'low']
-      expect(result.data.every((task: Task, index: number) => 
-        task.priority === priorities[index]
-      )).toBe(true)
-    })
-
-    it('should sort tasks by due date', () => {
-      const dueDateSortedTasks = [
-        {
-          id: '1',
-          title: 'Due First',
-          due_date: '2024-01-10',
-          status: 'todo'
-        },
-        {
-          id: '2',
-          title: 'Due Later',
-          due_date: '2024-01-20',
-          status: 'todo'
-        }
-      ]
-
-      mockUseTasks.mockReturnValue({
-        data: dueDateSortedTasks,
-        isLoading: false,
-        error: null
-      })
-
-      const result = mockUseTasks()
-      expect(result.data[0].due_date <= result.data[1].due_date).toBe(true)
+      const result = await response.json()
+      expect(result.collaborator.user_id).toBe('user-456')
     })
   })
 })
