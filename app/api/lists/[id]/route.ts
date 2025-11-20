@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { List } from '@/types'
 
 interface RouteParams {
   params: Promise<{
@@ -108,10 +109,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Update the list
-    const updateData: any = {}
-    if (name !== undefined) updateData.name = name
-    if (color !== undefined) updateData.color = color
-
+    const updateData: Partial<List> = { name, color }
     const { data: updatedList, error: updateError } = await supabase
       .from('lists')
       .update(updateData)

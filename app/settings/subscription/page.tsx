@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress'
 import { Loader2, ExternalLink, Crown, AlertCircle, CheckCircle, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import type { SubscriptionWithUsage } from '@/types/subscriptions'
+import type { SubscriptionLimits, SubscriptionWithUsage } from '@/types/subscriptions'
 import { isUnlimited } from '@/types/subscriptions'
 
 export default function SubscriptionManagementPage() {
@@ -99,7 +99,16 @@ export default function SubscriptionManagementPage() {
   }
 
   const isPro = subscription.plan?.name === 'pro'
-  const limits = subscription.plan?.limits || {}
+  const limits: SubscriptionLimits = subscription.plan?.limits ?? {
+    maxTasks: 50,
+    maxWorkspaces: 1,
+    maxFriends: 10,
+    maxNudgesPerDay: 3,
+    maxFileSize: 10,
+    jarvisConversationsPerMonth: 5,
+    jarvisTokensPerMonth: 10000,
+    conversationHistoryDays: 7,
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">

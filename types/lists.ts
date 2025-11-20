@@ -10,6 +10,7 @@
 export interface List {
   id: string
   workspace_id: string
+  color: string
   name: string
   created_by: string
   created_at: string
@@ -20,6 +21,7 @@ export interface List {
  * List Member Interface
  */
 export interface ListMember {
+  id: string
   list_id: string
   user_id: string
   role: ListMemberRole

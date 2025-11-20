@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/layout/Header";
 import QueryProvider from "@/components/providers/QueryProvider";
 
+// @ts-expect-error: allow global CSS side-effect import without module declarations
 import "./globals.css";
 
 const geistSans = Geist({

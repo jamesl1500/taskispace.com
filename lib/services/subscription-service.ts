@@ -11,7 +11,7 @@ import { isUnlimited, isLimitReached } from '@/types/subscriptions'
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
+  apiVersion: '2025-10-29.clover'
 })
 
 export class SubscriptionService {
@@ -442,8 +442,12 @@ export class SubscriptionService {
       .from('subscriptions')
       .update({
         status: stripeSubscription.status as Subscription['status'],
-        current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+        current_period_start: (stripeSubscription as any).current_period_start
+          ? new Date((stripeSubscription as any).current_period_start * 1000).toISOString()
+          : null,
+        current_period_end: (stripeSubscription as any).current_period_end
+          ? new Date((stripeSubscription as any).current_period_end * 1000).toISOString()
+          : null,
         cancel_at_period_end: stripeSubscription.cancel_at_period_end,
         canceled_at: stripeSubscription.canceled_at ? new Date(stripeSubscription.canceled_at * 1000).toISOString() : null,
       })
