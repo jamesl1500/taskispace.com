@@ -1,0 +1,68 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      - name: Update dependencies
+        run: |
+          pnpm update --latest --recursive
+          pnpm install
+
+      - name: Run tests
+        run: pnpm test -- --run
+        continue-on-error: true
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update dependencies'
+          title: '🔄 Automated Dependency Updates'
+          body: |
+            ## Dependency Updates
+            
+            This PR updates all dependencies to their latest versions.
+            
+            **Please review the changes carefully and run tests before merging.**
+            
+            ### Changes
+            - Updated all dependencies to latest versions
+            - Ran automated tests (see workflow logs)
+            
+            ### Action Required
+            - [ ] Review dependency changes
+            - [ ] Verify tests pass
+            - [ ] Check for breaking changes in changelogs
+            - [ ] Test locally if needed
+            
+            ---
+            *This PR was automatically created by GitHub Actions*
+          branch: deps/automated-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
