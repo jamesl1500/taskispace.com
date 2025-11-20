@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { collaboratorsApi } from '@/lib/api/taskManagement'
 
 interface RouteParams {
   params: Promise<{
@@ -79,29 +78,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify task exists and user has permission to delete
-    const { data: task, error: taskError } = await supabase
-      .from('tasks')
-      .select('id, created_by')
-      .eq('id', resolvedParams.id)
-      .single()
-
-    if (taskError || !task) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
-    }
-
-    if (task.created_by !== user.id) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
-
-    // Delete the task
+    // Delete the task - RLS policies will handle access control
     const { error: deleteError } = await supabase
       .from('tasks')
       .delete()
       .eq('id', resolvedParams.id)
 
     if (deleteError) {
-      return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 })
+      console.error('Delete error:', deleteError)
+      return NextResponse.json({ error: 'Failed to delete task: ' + deleteError.message }, { status: 500 })
     }
 
     return NextResponse.json({ message: 'Task deleted successfully' })
@@ -123,39 +108,27 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const body = await request.json()
 
-    // Get task with access verification
-    const { data: task, error: taskError } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('id', resolvedParams.id)
-      .single()
-
-    if (taskError || !task) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
-    }
-
-    // Verify if logged user is a collaborator or owner
-    const collaborator = collaboratorsApi.getByTaskId(task.id)
-
-    if (task.created_by !== user.id) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
-
-    // Update the task
-    const { data: updatedTask, error: updateError } = await supabase
+    // Update the task - RLS policies will handle access control
+    const { data: updatedTasks, error: updateError } = await supabase
       .from('tasks')
       .update(body)
       .eq('id', resolvedParams.id)
       .select('*')
-      .single()
 
     if (updateError) {
-      return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
+      console.error('Update error:', updateError)
+      return NextResponse.json({ error: 'Failed to update task: ' + updateError.message }, { status: 500 })
     }
 
-    return NextResponse.json(updatedTask)
+    if (!updatedTasks || updatedTasks.length === 0) {
+      return NextResponse.json({ error: 'Task not found or access denied' }, { status: 404 })
+    }
+
+    return NextResponse.json(updatedTasks[0])
   } catch (error) {
     console.error('Error in PATCH /api/tasks/[id]:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error: ' + (error instanceof Error ? error.message : 'Unknown error')
+    }, { status: 500 })
   }
 }

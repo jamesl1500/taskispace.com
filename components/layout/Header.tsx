@@ -22,6 +22,7 @@ export default function Header() {
   const { user, profile, loading } = useAuthWithProfile()
   const { mutate: signOut } = useSignOut()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [createNewOpen, setCreateNewOpen] = useState(false)
 
   const handleSignOut = () => {
     signOut()
@@ -77,10 +78,22 @@ export default function Header() {
                 {/* Notifications */}
                 <NotificationBell />
 
-                <Button variant="outline" size="sm" className="text-xs px-2">
+                {/* New button - Opens modal to create new task, workspace, etc. */}
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => setCreateNewOpen(!createNewOpen)}>
                   <Plus className="h-3 w-3 mr-1" />
                   New
                 </Button>
+
+                {createNewOpen && (
+                  <div className="absolute top-12 right-20 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 z-50">
+                    <Button variant="ghost" className="w-full text-left text-xs px-2 py-1">
+                      New Task
+                    </Button>
+                    <Button variant="ghost" className="w-full text-left text-xs px-2 py-1">
+                      New Workspace
+                    </Button>
+                  </div>
+                )}
 
                 {/* Jarvis AI Bot */}
                 <Jarvis />

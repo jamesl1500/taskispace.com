@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdminClient } from '@/lib/supabase/auth'
 import Stripe from 'stripe'
 import type { 
   Subscription, 
   SubscriptionPlan, 
-  SubscriptionUsage,
   SubscriptionWithUsage,
   SubscriptionLimits 
 } from '@/types/subscriptions'
@@ -15,17 +15,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 export class SubscriptionService {
-  private supabase
-
-  constructor() {
-    this.supabase = createClient()
-  }
-
   /**
    * Get the current user's subscription with plan details
    */
   async getUserSubscription(userId: string): Promise<Subscription | null> {
-    const { data, error } = await this.supabase
+    const supabase = await createClient()
+    const { data, error } = await supabase
       .from('subscriptions')
       .select(`
         *,
@@ -80,7 +75,8 @@ export class SubscriptionService {
    * Get current usage count for a specific metric
    */
   private async getUsageCount(userId: string, metricName: string, periodStart?: string): Promise<number> {
-    const query = this.supabase
+    const supabase = await createClient()
+    const query = supabase
       .from('subscription_usage')
       .select('current_value')
       .eq('user_id', userId)
@@ -154,6 +150,7 @@ export class SubscriptionService {
    * Increment usage for a specific metric
    */
   async incrementUsage(userId: string, metricName: string, amount: number = 1): Promise<void> {
+    const supabase = await createClient()
     const now = new Date()
     let periodStart: Date
     let periodEnd: Date | null = null
@@ -170,7 +167,7 @@ export class SubscriptionService {
       periodStart = new Date(0) // Unix epoch
     }
 
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('subscription_usage')
       .upsert({
         user_id: userId,
@@ -192,10 +189,11 @@ export class SubscriptionService {
    * Decrement usage for a specific metric (e.g., when deleting a task)
    */
   async decrementUsage(userId: string, metricName: string, amount: number = 1): Promise<void> {
+    const supabase = await createClient()
     const current = await this.getUsageCount(userId, metricName)
     const newValue = Math.max(0, current - amount)
 
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('subscription_usage')
       .update({ current_value: newValue })
       .eq('user_id', userId)
@@ -210,7 +208,8 @@ export class SubscriptionService {
    * Get all available subscription plans
    */
   async getPlans(): Promise<SubscriptionPlan[]> {
-    const { data, error } = await this.supabase
+    const supabase = await createClient()
+    const { data, error } = await supabase
       .from('subscription_plans')
       .select('*')
       .eq('is_active', true)
@@ -229,8 +228,9 @@ export class SubscriptionService {
    */
   async createCheckoutSession(userId: string, planId: string, billingPeriod: 'monthly' | 'yearly'): Promise<{ url: string | null; error?: string }> {
     try {
+      const supabase = await createClient()
       // Get the plan
-      const { data: plan } = await this.supabase
+      const { data: plan } = await supabase
         .from('subscription_plans')
         .select('*')
         .eq('id', planId)
@@ -254,7 +254,7 @@ export class SubscriptionService {
 
       if (!customerId) {
         // Get user email
-        const { data: { user } } = await this.supabase.auth.getUser()
+        const { data: { user } } = await supabase.auth.getUser()
         if (!user?.email) {
           return { url: null, error: 'User email not found' }
         }
@@ -266,7 +266,7 @@ export class SubscriptionService {
         customerId = customer.id
 
         // Save customer ID
-        await this.supabase
+        await supabase
           .from('subscriptions')
           .update({ stripe_customer_id: customerId })
           .eq('user_id', userId)
@@ -281,7 +281,7 @@ export class SubscriptionService {
           price: priceId,
           quantity: 1,
         }],
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/subscription?success=true`,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?success=true&tab=subscription`,
         cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?canceled=true`,
         metadata: {
           user_id: userId,
@@ -309,7 +309,7 @@ export class SubscriptionService {
 
       const session = await stripe.billingPortal.sessions.create({
         customer: subscription.stripe_customer_id,
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/subscription`,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=subscription`,
       })
 
       return { url: session.url }
@@ -323,9 +323,12 @@ export class SubscriptionService {
    * Handle Stripe webhook events
    */
   async handleWebhookEvent(event: Stripe.Event): Promise<void> {
+    console.log('Processing webhook event:', event.type)
+    
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
+        console.log('Checkout completed for session:', session.id)
         await this.handleCheckoutComplete(session)
         break
       }
@@ -361,15 +364,49 @@ export class SubscriptionService {
    * Handle successful checkout completion
    */
   private async handleCheckoutComplete(session: Stripe.Checkout.Session): Promise<void> {
+    const supabase = supabaseAdminClient() // Use admin client to bypass RLS
     const userId = session.metadata?.user_id
     const planId = session.metadata?.plan_id
+
+    console.log('Handling checkout complete:', { userId, planId, sessionId: session.id })
 
     if (!userId || !planId) {
       console.error('Missing user_id or plan_id in checkout session metadata')
       return
     }
 
-    const { error } = await this.supabase
+    // See if subscription record exists
+    const { data: existingSubscription } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (!existingSubscription) {
+      // Create new subscription record
+      const { error } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: userId,
+          plan_id: planId,
+          stripe_customer_id: session.customer as string,
+          stripe_subscription_id: session.subscription as string,
+          status: 'active',
+          created_at: new Date().toISOString(),
+        })
+
+      if (error) {
+        console.error('Error creating subscription after checkout:', error)
+      } else {
+        console.log('✅ Created new subscription for user:', userId)
+      }
+      return
+    }
+
+    console.log('Updating existing subscription for user:', userId)
+
+    // Update existing subscription record
+    const { error } = await supabase
       .from('subscriptions')
       .update({
         plan_id: planId,
@@ -380,6 +417,8 @@ export class SubscriptionService {
 
     if (error) {
       console.error('Error updating subscription after checkout:', error)
+    } else {
+      console.log('✅ Updated subscription for user:', userId)
     }
   }
 
@@ -387,7 +426,8 @@ export class SubscriptionService {
    * Handle subscription updates
    */
   private async handleSubscriptionUpdate(stripeSubscription: Stripe.Subscription): Promise<void> {
-    const { data: subscription } = await this.supabase
+    const supabase = supabaseAdminClient() // Use admin client to bypass RLS
+    const { data: subscription } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('stripe_subscription_id', stripeSubscription.id)
@@ -398,7 +438,7 @@ export class SubscriptionService {
       return
     }
 
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('subscriptions')
       .update({
         status: stripeSubscription.status as Subscription['status'],
@@ -418,7 +458,8 @@ export class SubscriptionService {
    * Handle subscription cancellation - downgrade to free tier
    */
   private async handleSubscriptionCanceled(stripeSubscription: Stripe.Subscription): Promise<void> {
-    const { data: subscription } = await this.supabase
+    const supabase = supabaseAdminClient() // Use admin client to bypass RLS
+    const { data: subscription } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('stripe_subscription_id', stripeSubscription.id)
@@ -430,7 +471,7 @@ export class SubscriptionService {
     }
 
     // Get the free plan
-    const { data: freePlan } = await this.supabase
+    const { data: freePlan } = await supabase
       .from('subscription_plans')
       .select('id')
       .eq('name', 'free')
@@ -441,7 +482,7 @@ export class SubscriptionService {
       return
     }
 
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('subscriptions')
       .update({
         plan_id: freePlan.id,
@@ -459,9 +500,10 @@ export class SubscriptionService {
    * Handle successful payment
    */
   private async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+    const supabase = supabaseAdminClient() // Use admin client to bypass RLS
     if (!invoice.subscription) return
 
-    const { data: subscription } = await this.supabase
+    const { data: subscription } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('stripe_subscription_id', invoice.subscription as string)
@@ -473,7 +515,7 @@ export class SubscriptionService {
     const now = new Date()
     const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-    await this.supabase
+    await supabase
       .from('subscription_usage')
       .delete()
       .eq('user_id', subscription.user_id)
@@ -485,9 +527,10 @@ export class SubscriptionService {
    * Handle failed payment
    */
   private async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+    const supabase = supabaseAdminClient() // Use admin client to bypass RLS
     if (!invoice.subscription) return
 
-    const { error } = await this.supabase
+    const { error } = await supabase
       .from('subscriptions')
       .update({ status: 'past_due' })
       .eq('stripe_subscription_id', invoice.subscription as string)

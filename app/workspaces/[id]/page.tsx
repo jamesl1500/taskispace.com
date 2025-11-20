@@ -71,7 +71,8 @@ export default function WorkspaceDetailPage() {
     status: TaskStatus.TODO,
     priority: TaskPriority.MEDIUM,
     list_id: '',
-    due_date: ''
+    due_date: '',
+    workspace_id: params.id as string
   })
   
   const [editTaskForm, setEditTaskForm] = useState<UpdateTaskData>({})
@@ -176,10 +177,17 @@ export default function WorkspaceDetailPage() {
     if (!createTaskForm.title.trim() || !createTaskForm.list_id) return
 
     try {
+      // Ensure workspace_id and list_id are included in the request
+      const taskData = {
+        ...createTaskForm,
+        workspace_id: params.id as string,
+        list_id: createTaskForm.list_id
+      }
+
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(createTaskForm)
+        body: JSON.stringify(taskData)
       })
 
       if (!response.ok) throw new Error('Failed to create task')
@@ -196,7 +204,8 @@ export default function WorkspaceDetailPage() {
         status: TaskStatus.TODO,
         priority: TaskPriority.MEDIUM,
         list_id: '',
-        due_date: ''
+        due_date: '',
+        workspace_id: params.id as string
       })
     } catch (error) {
       console.error('Error creating task:', error)
@@ -302,7 +311,7 @@ export default function WorkspaceDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
         </div>
@@ -317,7 +326,7 @@ export default function WorkspaceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
         <div className="container mx-auto p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -331,7 +340,7 @@ export default function WorkspaceDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
         <div className="container mx-auto p-6">
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
@@ -348,7 +357,7 @@ export default function WorkspaceDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
       <div className="flex h-screen overflow-hidden">
         {/* Main Content */}
         <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>
@@ -414,6 +423,13 @@ export default function WorkspaceDetailPage() {
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Task
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/lists/${list.id}`)}
+                    >
+                      Manage List
                     </Button>
                   </div>
                 </div>

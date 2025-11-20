@@ -24,7 +24,7 @@ export default function ConversationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
       <main className="p-4 max-w-4xl mx-auto w-full">
         <div className="flex items-center justify-between mb-6">
         <div>

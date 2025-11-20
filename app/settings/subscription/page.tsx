@@ -5,11 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Loader2, ExternalLink, Crown, AlertCircle, CheckCircle } from 'lucide-react'
+import { Loader2, ExternalLink, Crown, AlertCircle, CheckCircle, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import type { SubscriptionWithUsage } from '@/types/subscriptions'
-import { isUnlimited, isLimitReached } from '@/types/subscriptions'
+import { isUnlimited } from '@/types/subscriptions'
 
 export default function SubscriptionManagementPage() {
   const [subscription, setSubscription] = useState<SubscriptionWithUsage | null>(null)
@@ -66,6 +66,12 @@ export default function SubscriptionManagementPage() {
     return 'text-green-600 dark:text-green-400'
   }
 
+  const getProgressColor = (percentage: number): string => {
+    if (percentage >= 90) return '[&>div]:bg-red-500'
+    if (percentage >= 70) return '[&>div]:bg-yellow-500'
+    return '[&>div]:bg-green-500'
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -76,16 +82,18 @@ export default function SubscriptionManagementPage() {
 
   if (!subscription) {
     return (
-      <div className="container max-w-4xl py-8">
-        <Card>
-          <CardHeader>
-            <AlertCircle className="w-8 h-8 text-red-600 mb-2" />
-            <CardTitle>Subscription Not Found</CardTitle>
-            <CardDescription>
-              We couldn&apos;t load your subscription details. Please try again later.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 py-12">
+        <div className="container max-w-2xl px-4">
+          <Card className="border-red-200 dark:border-red-800">
+            <CardHeader>
+              <AlertCircle className="w-8 h-8 text-red-600 mb-2" />
+              <CardTitle>Subscription Not Found</CardTitle>
+              <CardDescription>
+                We couldn&apos;t load your subscription details. Please try again later.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
       </div>
     )
   }
@@ -94,175 +102,243 @@ export default function SubscriptionManagementPage() {
   const limits = subscription.plan?.limits || {}
 
   return (
-    <div className="container max-w-4xl py-8 space-y-6">
-      {/* Current Plan */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                {isPro && <Crown className="w-5 h-5 text-yellow-500" />}
-                {subscription.plan?.name === 'free' ? 'Free Plan' : 'Pro Plan'}
-              </CardTitle>
-              <CardDescription>
-                {isPro
-                  ? `$${subscription.plan?.price_monthly || 5}/month - Unlimited productivity`
-                  : 'Get started with essential features'}
-              </CardDescription>
-            </div>
-            {subscription.status === 'active' && (
-              <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                Active
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isPro ? (
-            <>
-              {subscription.current_period_end && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Your subscription renews on{' '}
-                  <strong>
-                    {new Date(subscription.current_period_end).toLocaleDateString()}
-                  </strong>
-                </p>
-              )}
-              <Button onClick={handleManageBilling} disabled={isProcessing}>
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Manage Billing
-                  </>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      <div className="container max-w-5xl py-12 px-4 sm:px-6 lg:px-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Subscription & Usage
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Manage your subscription plan and track resource usage
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          {/* Current Plan */}
+          <Card className="border-2 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-2">
+                  <CardTitle className="flex items-center gap-2 text-2xl">
+                    {isPro ? (
+                      <Crown className="w-6 h-6 text-yellow-500" />
+                    ) : (
+                      <Sparkles className="w-6 h-6 text-gray-400" />
+                    )}
+                    {subscription.plan?.name === 'free' ? 'Free Plan' : 'Pro Plan'}
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    {isPro
+                      ? `$${subscription.plan?.price_monthly || 5}/month · Unlimited productivity power`
+                      : 'Essential features to get you started'}
+                  </CardDescription>
+                </div>
+                {subscription.status === 'active' && (
+                  <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 h-fit px-3 py-1">
+                    <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                    Active
+                  </Badge>
                 )}
-              </Button>
-            </>
-          ) : (
-            <Button
-              onClick={() => router.push('/pricing')}
-              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              <Crown className="w-4 h-4 mr-2" />
-              Upgrade to Pro
-            </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-2">
+              {isPro ? (
+                <div className="space-y-4">
+                  {subscription.current_period_end && (
+                    <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          Next billing date
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          Your subscription will automatically renew
+                        </p>
+                      </div>
+                      <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                        {new Date(subscription.current_period_end).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  )}
+                  <Button 
+                    onClick={handleManageBilling} 
+                    disabled={isProcessing}
+                    size="lg"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Manage Billing
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-100 dark:border-blue-900">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      🚀 Unlock unlimited tasks, workspaces, and premium AI features with Pro
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => router.push('/pricing')}
+                    size="lg"
+                    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade to Pro
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Usage Stats */}
+          <Card className="border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl">Usage This Month</CardTitle>
+              <CardDescription>Track your resource usage against plan limits</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Tasks */}
+              <UsageItem
+                label="Tasks Created"
+                current={subscription.usage.tasks}
+                limit={limits.maxTasks || 50}
+                getUsagePercentage={getUsagePercentage}
+                getUsageColor={getUsageColor}
+                getProgressColor={getProgressColor}
+              />
+
+              {/* Workspaces */}
+              <UsageItem
+                label="Workspaces"
+                current={subscription.usage.workspaces}
+                limit={limits.maxWorkspaces || 1}
+                getUsagePercentage={getUsagePercentage}
+                getUsageColor={getUsageColor}
+                getProgressColor={getProgressColor}
+              />
+
+              {/* Friends */}
+              <UsageItem
+                label="Friends"
+                current={subscription.usage.friends}
+                limit={limits.maxFriends || 10}
+                getUsagePercentage={getUsagePercentage}
+                getUsageColor={getUsageColor}
+                getProgressColor={getProgressColor}
+              />
+
+              {/* Nudges Today */}
+              <UsageItem
+                label="Nudges Sent Today"
+                current={subscription.usage.nudgesToday}
+                limit={limits.maxNudgesPerDay || 3}
+                getUsagePercentage={getUsagePercentage}
+                getUsageColor={getUsageColor}
+                getProgressColor={getProgressColor}
+              />
+
+              {/* Jarvis Conversations */}
+              <UsageItem
+                label="Jarvis Conversations"
+                current={subscription.usage.jarvisConversationsThisMonth}
+                limit={limits.jarvisConversationsPerMonth || 5}
+                getUsagePercentage={getUsagePercentage}
+                getUsageColor={getUsageColor}
+                getProgressColor={getProgressColor}
+              />
+
+              {/* Jarvis Tokens */}
+              <UsageItem
+                label="Jarvis AI Tokens"
+                current={subscription.usage.jarvisTokensThisMonth}
+                limit={limits.jarvisTokensPerMonth || 10000}
+                getUsagePercentage={getUsagePercentage}
+                getUsageColor={getUsageColor}
+                getProgressColor={getProgressColor}
+                formatNumber
+              />
+            </CardContent>
+          </Card>
+
+          {/* Upgrade Prompt */}
+          {!isPro && (
+            <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-yellow-500" />
+                  Need More Capacity?
+                </CardTitle>
+                <CardDescription className="text-blue-800 dark:text-blue-200">
+                  Upgrade to Pro for unlimited tasks, workspaces, friends, and enhanced Jarvis AI capabilities.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => router.push('/pricing')}
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  View Pro Features
+                </Button>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-      {/* Usage Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Usage This Month</CardTitle>
-          <CardDescription>Track your resource usage against plan limits</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Tasks */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Tasks Created</span>
-              <span className={getUsageColor(getUsagePercentage(subscription.usage.tasks, limits.maxTasks || 50))}>
-                {subscription.usage.tasks} / {isUnlimited(limits.maxTasks || 50) ? '∞' : limits.maxTasks || 50}
-              </span>
-            </div>
-            {!isUnlimited(limits.maxTasks || 50) && (
-              <Progress value={getUsagePercentage(subscription.usage.tasks, limits.maxTasks || 50)} />
-            )}
-          </div>
+// Usage Item Component
+function UsageItem({
+  label,
+  current,
+  limit,
+  getUsagePercentage,
+  getUsageColor,
+  getProgressColor,
+  formatNumber = false
+}: {
+  label: string
+  current: number
+  limit: number
+  getUsagePercentage: (current: number, limit: number) => number
+  getUsageColor: (percentage: number) => string
+  getProgressColor: (percentage: number) => string
+  formatNumber?: boolean
+}) {
+  const percentage = getUsagePercentage(current, limit)
+  const displayCurrent = formatNumber ? current.toLocaleString() : current
+  const displayLimit = isUnlimited(limit) ? '∞' : formatNumber ? limit.toLocaleString() : limit
 
-          {/* Workspaces */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Workspaces</span>
-              <span className={getUsageColor(getUsagePercentage(subscription.usage.workspaces, limits.maxWorkspaces || 1))}>
-                {subscription.usage.workspaces} / {isUnlimited(limits.maxWorkspaces || 1) ? '∞' : limits.maxWorkspaces || 1}
-              </span>
-            </div>
-            {!isUnlimited(limits.maxWorkspaces || 1) && (
-              <Progress value={getUsagePercentage(subscription.usage.workspaces, limits.maxWorkspaces || 1)} />
-            )}
-          </div>
-
-          {/* Friends */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Friends</span>
-              <span className={getUsageColor(getUsagePercentage(subscription.usage.friends, limits.maxFriends || 10))}>
-                {subscription.usage.friends} / {isUnlimited(limits.maxFriends || 10) ? '∞' : limits.maxFriends || 10}
-              </span>
-            </div>
-            {!isUnlimited(limits.maxFriends || 10) && (
-              <Progress value={getUsagePercentage(subscription.usage.friends, limits.maxFriends || 10)} />
-            )}
-          </div>
-
-          {/* Nudges Today */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Nudges Sent Today</span>
-              <span className={getUsageColor(getUsagePercentage(subscription.usage.nudgesToday, limits.maxNudgesPerDay || 3))}>
-                {subscription.usage.nudgesToday} / {isUnlimited(limits.maxNudgesPerDay || 3) ? '∞' : limits.maxNudgesPerDay || 3}
-              </span>
-            </div>
-            {!isUnlimited(limits.maxNudgesPerDay || 3) && (
-              <Progress value={getUsagePercentage(subscription.usage.nudgesToday, limits.maxNudgesPerDay || 3)} />
-            )}
-          </div>
-
-          {/* Jarvis Conversations */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Jarvis Conversations</span>
-              <span className={getUsageColor(getUsagePercentage(subscription.usage.jarvisConversationsThisMonth, limits.jarvisConversationsPerMonth || 5))}>
-                {subscription.usage.jarvisConversationsThisMonth} / {isUnlimited(limits.jarvisConversationsPerMonth || 5) ? '∞' : limits.jarvisConversationsPerMonth || 5}
-              </span>
-            </div>
-            {!isUnlimited(limits.jarvisConversationsPerMonth || 5) && (
-              <Progress value={getUsagePercentage(subscription.usage.jarvisConversationsThisMonth, limits.jarvisConversationsPerMonth || 5)} />
-            )}
-          </div>
-
-          {/* Jarvis Tokens */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Jarvis AI Tokens</span>
-              <span className={getUsageColor(getUsagePercentage(subscription.usage.jarvisTokensThisMonth, limits.jarvisTokensPerMonth || 10000))}>
-                {subscription.usage.jarvisTokensThisMonth.toLocaleString()} / {isUnlimited(limits.jarvisTokensPerMonth || 10000) ? '∞' : (limits.jarvisTokensPerMonth || 10000).toLocaleString()}
-              </span>
-            </div>
-            {!isUnlimited(limits.jarvisTokensPerMonth || 10000) && (
-              <Progress value={getUsagePercentage(subscription.usage.jarvisTokensThisMonth, limits.jarvisTokensPerMonth || 10000)} />
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Need More? */}
-      {!isPro && (
-        <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950">
-          <CardHeader>
-            <CardTitle className="text-blue-900 dark:text-blue-100">
-              Need More Capacity?
-            </CardTitle>
-            <CardDescription>
-              Upgrade to Pro for unlimited tasks, workspaces, friends, and enhanced Jarvis AI capabilities.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => router.push('/pricing')}
-              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              <Crown className="w-4 h-4 mr-2" />
-              View Pro Features
-            </Button>
-          </CardContent>
-        </Card>
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
+        <span className={`font-semibold ${getUsageColor(percentage)}`}>
+          {displayCurrent} / {displayLimit}
+        </span>
+      </div>
+      {!isUnlimited(limit) && (
+        <Progress 
+          value={percentage} 
+          className={`h-2 ${getProgressColor(percentage)}`}
+        />
       )}
     </div>
   )

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { 
   User, 
   Mail, 
@@ -21,11 +22,18 @@ import {
   CheckCircle,
   AlertCircle,
   Upload,
-  X
+  X,
+  Crown,
+  Sparkles,
+  ExternalLink
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Progress } from '@/components/ui/progress'
+import { toast } from 'sonner'
+import type { SubscriptionWithUsage } from '@/types/subscriptions'
+import { isUnlimited } from '@/types/subscriptions'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -63,6 +71,11 @@ export default function SettingsPage() {
     weeklyDigest: false
   })
 
+  // Subscription state
+  const [subscription, setSubscription] = useState<SubscriptionWithUsage | null>(null)
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true)
+  const [isProcessing, setIsProcessing] = useState(false)
+
   // UI state
   const [activeTab, setActiveTab] = useState('profile')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
@@ -83,6 +96,26 @@ export default function SettingsPage() {
       setEmail(user.email || '')
     }
   }, [profile, user])
+
+  // Fetch subscription data
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const response = await fetch('/api/subscription')
+        if (response.ok) {
+          const data = await response.json()
+          setSubscription(data)
+        }
+      } catch (error) {
+        console.error('Error fetching subscription:', error)
+      } finally {
+        setSubscriptionLoading(false)
+      }
+    }
+    if (user) {
+      fetchSubscription()
+    }
+  }, [user])
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -344,18 +377,312 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+    </div>
+  )
+}
+
+// Subscription Tab Component
+function SubscriptionTab({ 
+  subscription, 
+  subscriptionLoading,
+  isProcessing,
+  setIsProcessing
+}: {
+  subscription: SubscriptionWithUsage | null
+  subscriptionLoading: boolean
+  isProcessing: boolean
+  setIsProcessing: (processing: boolean) => void
+}) {
+  const router = useRouter()
+
+  const handleManageBilling = async () => {
+    setIsProcessing(true)
+    try {
+      const response = await fetch('/api/stripe/portal')
+      if (!response.ok) {
+        throw new Error('Failed to create portal session')
+      }
+      const data = await response.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error('Error opening billing portal:', error)
+      toast.error('Failed to open billing portal')
+      setIsProcessing(false)
+    }
+  }
+
+  const getUsagePercentage = (current: number, limit: number): number => {
+    if (isUnlimited(limit)) return 0
+    return Math.min((current / limit) * 100, 100)
+  }
+
+  const getUsageColor = (percentage: number): string => {
+    if (percentage >= 90) return 'text-red-600 dark:text-red-400'
+    if (percentage >= 70) return 'text-yellow-600 dark:text-yellow-400'
+    return 'text-green-600 dark:text-green-400'
+  }
+
+  const getProgressColor = (percentage: number): string => {
+    if (percentage >= 90) return '[&>div]:bg-red-500'
+    if (percentage >= 70) return '[&>div]:bg-yellow-500'
+    return '[&>div]:bg-green-500'
+  }
+
+  if (subscriptionLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     )
   }
 
+  if (!subscription) {
+    return (
+      <Card className="border-red-200 dark:border-red-800">
+        <CardHeader>
+          <div className="flex items-center gap-2 text-red-600">
+            <AlertCircle className="w-5 h-5" />
+            <CardTitle>Subscription Not Found</CardTitle>
+          </div>
+          <CardDescription>
+            We couldn&apos;t load your subscription details. Please try again later.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
+
+  const isPro = subscription.plan?.name === 'Pro'
+  const limits = (subscription.plan?.limits || {}) as Record<string, number>
+
+  return (
+    <div className="space-y-6">
+      {/* Current Plan */}
+      <Card className="border-2">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-2">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                {isPro ? (
+                  <Crown className="w-5 h-5 text-yellow-500" />
+                ) : (
+                  <Sparkles className="w-5 h-5 text-gray-400" />
+                )}
+                {subscription.plan?.name === 'free' ? 'Free Plan' : 'Pro Plan'}
+              </CardTitle>
+              <CardDescription>
+                {isPro
+                  ? `$${subscription.plan?.price_monthly || 5}/month · Unlimited productivity power`
+                  : 'Essential features to get you started'}
+              </CardDescription>
+            </div>
+            {subscription.status === 'active' && (
+              <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 h-fit px-3 py-1">
+                <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                Active
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isPro ? (
+            <div className="space-y-4">
+              {subscription.current_period_end && (
+                <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      Next billing date
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      Your subscription will automatically renew
+                    </p>
+                  </div>
+                  <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                    {new Date(subscription.current_period_end).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
+              )}
+              <Button 
+                onClick={handleManageBilling} 
+                disabled={isProcessing}
+                variant="outline"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Manage Billing
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-100 dark:border-blue-900">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  🚀 Unlock unlimited tasks, workspaces, and premium AI features with Pro
+                </p>
+              </div>
+              <Button
+                onClick={() => router.push('/pricing')}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Pro
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Usage Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage This Month</CardTitle>
+          <CardDescription>Track your resource usage against plan limits</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <UsageItem
+            label="Tasks Created"
+            current={subscription.usage.tasks}
+            limit={limits.maxTasks || 50}
+            getUsagePercentage={getUsagePercentage}
+            getUsageColor={getUsageColor}
+            getProgressColor={getProgressColor}
+          />
+
+          <UsageItem
+            label="Workspaces"
+            current={subscription.usage.workspaces}
+            limit={limits.maxWorkspaces || 1}
+            getUsagePercentage={getUsagePercentage}
+            getUsageColor={getUsageColor}
+            getProgressColor={getProgressColor}
+          />
+
+          <UsageItem
+            label="Friends"
+            current={subscription.usage.friends}
+            limit={limits.maxFriends || 10}
+            getUsagePercentage={getUsagePercentage}
+            getUsageColor={getUsageColor}
+            getProgressColor={getProgressColor}
+          />
+
+          <UsageItem
+            label="Nudges Sent Today"
+            current={subscription.usage.nudgesToday}
+            limit={limits.maxNudgesPerDay || 3}
+            getUsagePercentage={getUsagePercentage}
+            getUsageColor={getUsageColor}
+            getProgressColor={getProgressColor}
+          />
+
+          <UsageItem
+            label="Jarvis Conversations"
+            current={subscription.usage.jarvisConversationsThisMonth}
+            limit={limits.jarvisConversationsPerMonth || 5}
+            getUsagePercentage={getUsagePercentage}
+            getUsageColor={getUsageColor}
+            getProgressColor={getProgressColor}
+          />
+
+          <UsageItem
+            label="Jarvis AI Tokens"
+            current={subscription.usage.jarvisTokensThisMonth}
+            limit={limits.jarvisTokensPerMonth || 10000}
+            getUsagePercentage={getUsagePercentage}
+            getUsageColor={getUsageColor}
+            getProgressColor={getProgressColor}
+            formatNumber
+          />
+        </CardContent>
+      </Card>
+
+      {/* Upgrade Prompt */}
+      {!isPro && (
+        <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50">
+          <CardHeader>
+            <CardTitle className="text-blue-900 dark:text-blue-100 flex items-center gap-2">
+              <Crown className="w-5 h-5 text-yellow-500" />
+              Need More Capacity?
+            </CardTitle>
+            <CardDescription className="text-blue-800 dark:text-blue-200">
+              Upgrade to Pro for unlimited tasks, workspaces, friends, and enhanced Jarvis AI capabilities.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => router.push('/pricing')}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              View Pro Features
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// Usage Item Component
+function UsageItem({
+  label,
+  current,
+  limit,
+  getUsagePercentage,
+  getUsageColor,
+  getProgressColor,
+  formatNumber = false
+}: {
+  label: string
+  current: number
+  limit: number
+  getUsagePercentage: (current: number, limit: number) => number
+  getUsageColor: (percentage: number) => string
+  getProgressColor: (percentage: number) => string
+  formatNumber?: boolean
+}) {
+  const percentage = getUsagePercentage(current, limit)
+  const displayCurrent = formatNumber ? current.toLocaleString() : current
+  const displayLimit = isUnlimited(limit) ? '∞' : formatNumber ? limit.toLocaleString() : limit
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
+        <span className={`font-semibold ${getUsageColor(percentage)}`}>
+          {displayCurrent} / {displayLimit}
+        </span>
+      </div>
+      {!isUnlimited(limit) && (
+        <Progress 
+          value={percentage} 
+          className={`h-2 ${getProgressColor(percentage)}`}
+        />
+      )}
+    </div>
+  )
+}
   if (!user) {
     return null
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="min-h-screen bg-gray-200 dark:bg-gray-900 py-10">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Settings</h1>
@@ -363,7 +690,7 @@ export default function SettingsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6 shadow-sm border-b border-border mb-4">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profile</span>
@@ -375,6 +702,10 @@ export default function SettingsPage() {
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Lock className="h-4 w-4" />
               <span className="hidden sm:inline">Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="subscription" className="flex items-center gap-2">
+              <Crown className="h-4 w-4" />
+              <span className="hidden sm:inline">Subscription</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
@@ -675,6 +1006,16 @@ export default function SettingsPage() {
                 </form>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Subscription Tab */}
+          <TabsContent value="subscription">
+            <SubscriptionTab 
+              subscription={subscription}
+              subscriptionLoading={subscriptionLoading}
+              isProcessing={isProcessing}
+              setIsProcessing={setIsProcessing}
+            />
           </TabsContent>
 
           {/* Notifications Tab */}

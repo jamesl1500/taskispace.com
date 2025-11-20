@@ -35,9 +35,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('✅ Webhook received:', event.type, event.id)
+
     // Handle the event
     const subscriptionService = new SubscriptionService()
     await subscriptionService.handleWebhookEvent(event)
+
+    console.log('✅ Webhook processed successfully:', event.type)
 
     return NextResponse.json({ received: true })
   } catch (error) {

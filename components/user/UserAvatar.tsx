@@ -46,15 +46,16 @@ export default function UserAvatar({ userId, size = 40 }: UserAvatarProps) {
     return <div className="bg-slate-200 dark:bg-slate-700 rounded-full w-10 h-10" />
   }
 
-  const avatarUrl = user.user_metadata?.avatar_url || '/default_avatar.jpg'
+  const avatarUrl = user.avatar_url || '/default_avatar.jpg'
 
   return (
     <Image
       src={avatarUrl}
-      alt={`${user.user_metadata?.full_name}'s avatar`}
+      alt={`${user?.display_name}'s avatar`}
       width={size}
       height={size}
-      className="rounded-full"
+      className="rounded-full object-cover"
+      unoptimized
     />
   )
 }

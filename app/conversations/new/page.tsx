@@ -37,7 +37,7 @@ export default function NewConversationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="mb-6">
         <Link href="/conversations">

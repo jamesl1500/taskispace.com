@@ -183,6 +183,17 @@ export class NotificationService {
     return data as NotificationPreferences;
   }
 
+  // Get notification preference
+  static async getNotificationPreference<K extends keyof NotificationPreferences>(key: K): Promise<NotificationPreferences[K] | null> {
+    const { data, error } = await supabase
+      .from('notification_preferences')
+      .select(key as string)
+      .single();
+
+    if (error) throw error;
+    return data ? (data as any)[key] : null;
+  }
+
   // Update notification preferences
   static async updateNotificationPreferences(preferences: Partial<NotificationPreferences>) {
     const { data, error } = await supabase

@@ -68,11 +68,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json()
-    const { user_id, role = 'editor' } = body
-
-    if (!user_id) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
-    }
+    const { email, user_id, role = 'editor' } = body
 
     // First verify the list exists (avoid complex joins that cause RLS recursion)
     const { data: list, error: listError } = await supabase
@@ -96,12 +92,32 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
+    // If email provided, look up user by email from profiles
+    let targetUserId = user_id
+    if (email && !user_id) {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single()
+
+      if (profileError || !profile) {
+        return NextResponse.json({ error: 'User not found with that email' }, { status: 404 })
+      }
+
+      targetUserId = profile.id
+    }
+
+    if (!targetUserId) {
+      return NextResponse.json({ error: 'User ID or email is required' }, { status: 400 })
+    }
+
     // Check if user is already a member
     const { data: existingMember, error: memberCheckError } = await supabase
       .from('list_members')
       .select('user_id')
       .eq('list_id', resolvedParams.id)
-      .eq('user_id', user_id)
+      .eq('user_id', targetUserId)
       .single()
 
     if (!memberCheckError && existingMember) {
@@ -112,7 +128,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .from('list_members')
       .insert({
         list_id: resolvedParams.id,
-        user_id,
+        user_id: targetUserId,
         role,
         added_at: new Date().toISOString()
       })

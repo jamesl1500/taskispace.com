@@ -61,7 +61,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
       <div className="container mx-auto py-8 space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">

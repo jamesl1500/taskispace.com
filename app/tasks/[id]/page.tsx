@@ -212,7 +212,7 @@ export default function TaskDetailPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 p-6">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex items-center gap-4">
             <Skeleton className="h-8 w-8" />
@@ -232,7 +232,7 @@ export default function TaskDetailPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Access Denied</CardTitle>
@@ -252,7 +252,7 @@ export default function TaskDetailPage() {
 
   if (error || !task) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Error</CardTitle>
@@ -277,7 +277,7 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
       <div className="flex">
         {/* Main Content */}
         <div className={`flex-1 transition-all duration-300 ${isPanelOpen ? 'mr-[600px]' : ''}`}>

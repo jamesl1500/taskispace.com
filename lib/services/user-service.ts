@@ -13,8 +13,8 @@ export class UserService {
       * 
       * @private
       */
-     private async getSupabaseClient() {
-         return await supabaseAdminClient();
+     private getSupabaseClient() {
+         return supabaseAdminClient();
      }
 
     /**
@@ -25,8 +25,12 @@ export class UserService {
      * @returns The user data or null if not found
      */
     async getUserById(userId: string) {
-        const supabase = await this.getSupabaseClient()
-        const { data: user, error } = await supabase.auth.admin.getUserById(userId)
+        const supabase = this.getSupabaseClient()
+        const { data: user, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single()
 
         if (error) {
             console.error('Error fetching user by ID:', error)
@@ -46,7 +50,7 @@ export class UserService {
      * @returns The updated user data
      */
     async updateUserProfile(userId: string, profileData: Partial<{ name: string; avatar_url: string }>) {
-        const supabase = await this.getSupabaseClient()
+        const supabase = this.getSupabaseClient()
         const { data, error } = await supabase
             .from('users')
             .update(profileData)
@@ -68,7 +72,7 @@ export class UserService {
      * @returns The deleted user data
      */
     async deleteUser(userId: string) {
-        const supabase = await this.getSupabaseClient()
+        const supabase = this.getSupabaseClient()
         const { data, error } = await supabase
             .from('users')
             .delete()

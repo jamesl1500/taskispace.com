@@ -111,7 +111,7 @@ export default function TasksPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 p-6">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
@@ -148,7 +148,7 @@ export default function TasksPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Error Loading Tasks</CardTitle>
