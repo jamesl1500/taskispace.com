@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     
     // Get current user
@@ -13,8 +14,6 @@ export async function PATCH(
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { id } = params;
     const body = await request.json();
     const { read } = body;
 
@@ -40,17 +39,18 @@ export async function PATCH(
     }
 
     return NextResponse.json(notification);
-  } catch (error) {
-    console.error('Error in notification PATCH API:', error);
+  } catch {
+    console.error('Error in notification PATCH API');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     
     // Get current user
@@ -58,8 +58,6 @@ export async function DELETE(
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { id } = params;
 
     const { error } = await supabase
       .from('notifications')
@@ -73,8 +71,8 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error in notification DELETE API:', error);
+  } catch {
+    console.error('Error in notification DELETE API');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

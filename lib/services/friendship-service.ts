@@ -164,14 +164,17 @@ export class FriendshipService {
       throw new Error(`Failed to fetch friend requests: ${error.message}`)
     }
 
-    return requests?.map(r => ({
-      id: r.id,
-      from_user_id: r.user_id,
-      to_user_id: r.friend_id,
-      status: r.status as 'pending',
-      created_at: r.created_at,
-      from_user_profile: r.from_user_profile as Record<string, unknown>
-    })) || []
+    return requests?.map(r => {
+      const profile = Array.isArray(r.from_user_profile) ? r.from_user_profile[0] : r.from_user_profile
+      return {
+        id: r.id,
+        from_user_id: r.user_id,
+        to_user_id: r.friend_id,
+        status: r.status as 'pending',
+        created_at: r.created_at,
+        from_user_profile: profile as { user_name: string; display_name: string | null; avatar_url: string | null; }
+      }
+    }) || []
   }
 
   /**

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,7 +12,7 @@ interface User {
   email?: string
 }
 
-export default function VerifyRequiredPage() {
+function VerifyRequiredContent() {
   const searchParams = useSearchParams()
   const emailParam = searchParams.get('email')
   
@@ -205,5 +205,13 @@ export default function VerifyRequiredPage() {
           )}
         </CardFooter>
       </Card>
+  )
+}
+
+export default function VerifyRequiredPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyRequiredContent />
+    </Suspense>
   )
 }

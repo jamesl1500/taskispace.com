@@ -62,14 +62,22 @@ export async function POST() {
     }
 
     // Update subscription in database
+    const currentPeriodStart = 'current_period_start' in stripeSubscription && typeof stripeSubscription.current_period_start === 'number' 
+      ? new Date(stripeSubscription.current_period_start * 1000).toISOString()
+      : new Date().toISOString()
+    
+    const currentPeriodEnd = 'current_period_end' in stripeSubscription && typeof stripeSubscription.current_period_end === 'number'
+      ? new Date(stripeSubscription.current_period_end * 1000).toISOString()
+      : new Date().toISOString()
+
     const { error: updateError } = await supabase
       .from('subscriptions')
       .update({
         plan_id: proPlan.id,
         stripe_subscription_id: stripeSubscription.id,
         status: 'active',
-        current_period_start: new Date((stripeSubscription as any).current_period_start * 1000).toISOString(),
-        current_period_end: new Date((stripeSubscription as any).current_period_end * 1000).toISOString(),
+        current_period_start: currentPeriodStart,
+        current_period_end: currentPeriodEnd,
       })
       .eq('user_id', user.id)
 

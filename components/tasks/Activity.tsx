@@ -22,6 +22,10 @@ interface ActivityProps {
   taskId: string
 }
 
+const hasDescription = (payload: unknown): payload is { description: string } => {
+  return payload !== null && typeof payload === 'object' && 'description' in payload && typeof (payload as { description: unknown }).description === 'string'
+}
+
 export default function Activity({ taskId }: ActivityProps) {
   const [filter, setFilter] = useState<string | null>(null)
   const [offset, setOffset] = useState(0)
@@ -217,9 +221,9 @@ export default function Activity({ taskId }: ActivityProps) {
                             </div>
                         </div>
                         
-                        {activity.payload && typeof activity.payload === 'object' && 'description' in activity.payload && activity.payload.description && (
+                        {hasDescription(activity.payload) && (
                           <p className="text-sm text-gray-600 mt-2 ml-8">
-                            {String(activity.payload.description)}
+                            {activity.payload.description}
                           </p>
                         )}
 

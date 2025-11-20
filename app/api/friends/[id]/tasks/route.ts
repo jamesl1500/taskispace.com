@@ -7,10 +7,10 @@ import { friendshipService } from '@/lib/services/friendship-service'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: friendId } = params
+    const { id: friendId } = await params
     const tasks = await friendshipService.getFriendTasks(friendId)
     return NextResponse.json(tasks)
   } catch (error) {

@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     
     console.log('Debug signup attempt:', { email, user_name, full_name })
     
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // First check if username already exists
     const { data: existingProfile, error: checkError } = await supabase
@@ -37,19 +37,21 @@ export async function POST(request: NextRequest) {
       }
     })
     
+    const user = data.user
+    
     console.log('Signup result:', { 
-      user: data.user ? { id: data.user.id, email: data.user.email } : null,
+      user: user ? { id: user.id, email: user.email } : null,
       error: error ? { message: error.message, status: error.status } : null 
     })
     
     if (error) {
       // Check if the user was created but profile creation failed
-      if (data.user) {
+      if (user) {
         console.log('User created but error occurred, checking profile...')
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', data.user.id)
+          .eq('id', user.id)
           .single()
         
         console.log('Profile check after error:', { profile, profileError })
@@ -59,30 +61,30 @@ export async function POST(request: NextRequest) {
         error: error.message,
         details: {
           status: error.status,
-          user_created: !!data.user,
-          user_id: data.user?.id
+          user_created: !!user,
+          user_id: user?.id
         }
       }, { status: 400 })
     }
     
     // Check if profile was created
-    if (data.user) {
+    if (user) {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', data.user.id)
+        .eq('id', user.id)
         .single()
       
       console.log('Profile after successful signup:', { profile, profileError })
       
       return NextResponse.json({ 
         success: true,
-        user: data.user,
+        user,
         profile 
       })
     }
     
-    return NextResponse.json({ success: true, user: data.user })
+    return NextResponse.json({ success: true, user })
     
   } catch (error) {
     console.error('Unexpected error in debug signup:', error)

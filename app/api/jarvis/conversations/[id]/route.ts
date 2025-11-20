@@ -7,10 +7,10 @@ import { jarvisService } from '@/lib/services/jarvis-service'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const conversation = await jarvisService.getConversation(id)
     return NextResponse.json(conversation)
   } catch (error) {
@@ -32,10 +32,10 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const { title } = await request.json()
 
     if (!title || typeof title !== 'string') {
@@ -63,10 +63,10 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const result = await jarvisService.deleteConversation(id)
     return NextResponse.json(result)
   } catch (error) {

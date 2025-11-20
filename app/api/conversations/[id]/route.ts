@@ -4,9 +4,10 @@ import { conversationService } from '@/lib/services/conversation-service'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -17,10 +18,8 @@ export async function GET(
       )
     }
 
-    const awaitedParams = await params;
-
     // Validate conversation ID parameter
-    if (!awaitedParams.id || awaitedParams.id === 'undefined' || awaitedParams.id === 'null') {
+    if (!id || id === 'undefined' || id === 'null') {
       return NextResponse.json(
         { error: 'Invalid conversation ID' },
         { status: 400 }
@@ -35,9 +34,9 @@ export async function GET(
       )
     }
 
-    console.log('Fetching conversation:', awaitedParams.id, 'for user:', user.id)
+    console.log('Fetching conversation:', id, 'for user:', user.id)
 
-    const conversation = await conversationService.getConversation(awaitedParams.id, user.id)
+    const conversation = await conversationService.getConversation(id, user.id)
     
     if (!conversation) {
       return NextResponse.json(
@@ -66,9 +65,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -79,10 +79,8 @@ export async function PUT(
       )
     }
 
-    const awaitedParams = await params;
-
     // Validate conversation ID parameter
-    if (!awaitedParams.id || awaitedParams.id === 'undefined' || awaitedParams.id === 'null') {
+    if (!id || id === 'undefined' || id === 'null') {
       return NextResponse.json(
         { error: 'Invalid conversation ID' },
         { status: 400 }
@@ -101,7 +99,7 @@ export async function PUT(
     const { title, description } = body
 
     const conversation = await conversationService.updateConversation(
-      awaitedParams.id,
+      id,
       { title, description },
       user.id
     )
@@ -126,9 +124,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -139,10 +138,8 @@ export async function DELETE(
       )
     }
 
-    const awaitedParams = await params;
-
     // Validate conversation ID parameter
-    if (!awaitedParams.id || awaitedParams.id === 'undefined' || awaitedParams.id === 'null') {
+    if (!id || id === 'undefined' || id === 'null') {
       return NextResponse.json(
         { error: 'Invalid conversation ID' },
         { status: 400 }
@@ -157,7 +154,7 @@ export async function DELETE(
       )
     }
 
-    await conversationService.deleteConversation(awaitedParams.id, user.id)
+    await conversationService.deleteConversation(id, user.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

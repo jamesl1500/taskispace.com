@@ -4,9 +4,10 @@ import { conversationService } from '@/lib/services/conversation-service'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -17,14 +18,12 @@ export async function GET(
       )
     }
 
-    const awaitedParams = await params;
-
     const url = new URL(request.url)
     const limit = parseInt(url.searchParams.get('limit') || '50')
     const offset = parseInt(url.searchParams.get('offset') || '0')
 
     const messages = await conversationService.getConversationMessages(
-      awaitedParams.id,
+      id,
       user.id,
       limit,
       offset
@@ -50,9 +49,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -62,8 +62,6 @@ export async function POST(
         { status: 401 }
       )
     }
-
-    const awaitedParams = await params;
 
     const body = await request.json()
     const { content, subject, attachments } = body
@@ -76,7 +74,7 @@ export async function POST(
     }
 
     const message = await conversationService.createConversationMessage(
-      awaitedParams.id,
+      id,
       { content, subject, attachments },
       user.id
     )

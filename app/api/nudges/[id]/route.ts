@@ -7,10 +7,10 @@ import { friendshipService } from '@/lib/services/friendship-service'
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const result = await friendshipService.deleteNudge(id)
     return NextResponse.json(result)
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import { Search, User, Briefcase, CheckSquare, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { useSearch } from '@/hooks/queries/useSearchQueries'
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(searchParams?.get('q') || '')
   const [typeFilter, setTypeFilter] = useState(searchParams?.get('type') || 'all')
@@ -225,5 +225,13 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SearchPageContent />
+    </Suspense>
   )
 }

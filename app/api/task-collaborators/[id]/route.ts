@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { TaskCollaboratorWithTask } from '@/types/tasks'
 
 interface RouteParams {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { CreateConversationDialog } from '@/components/conversations/CreateConversationDialog'
 import { useProfileByUsername } from '@/hooks/queries/useProfileQueries'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 
-export default function NewConversationPage() {
+function NewConversationContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [showDialog, setShowDialog] = useState(true)
@@ -104,5 +104,13 @@ export default function NewConversationPage() {
       />
     </div>
       </div>
+  )
+}
+
+export default function NewConversationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewConversationContent />
+    </Suspense>
   )
 }

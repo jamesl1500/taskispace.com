@@ -55,7 +55,7 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
       const newCollaborator = await collaboratorsApi.add({
         task_id: taskId,
         user_id: addForm.user_id,
-        role: addForm.role
+        role: addForm.role as 'assignee' | 'reviewer' | 'observer'
       })
       
       setCollaborators(prev => [...prev, newCollaborator])
@@ -69,7 +69,7 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
 
   const handleUpdateRole = async (collaboratorId: string, newRole: TaskCollaboratorRole) => {
     try {
-      const updatedCollaborator = await collaboratorsApi.updateRole(collaboratorId, newRole)
+      const updatedCollaborator = await collaboratorsApi.updateRole(collaboratorId, newRole as 'assignee' | 'reviewer' | 'observer')
       
       setCollaborators(prev => prev.map(c => 
         c.id === collaboratorId ? updatedCollaborator : c

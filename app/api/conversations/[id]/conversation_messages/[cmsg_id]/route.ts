@@ -3,16 +3,17 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string; cmsg_id: string } }
+    { params }: { params: Promise<{ id: string; cmsg_id: string }> }
 ) {
     try {
+        const { id, cmsg_id } = await params;
         const supabase = await createClient();
         
         const { data, error } = await supabase
             .from('conversation_messages')
             .select('*')
-            .eq('id', params.cmsg_id)
-            .eq('conversation_id', params.id)
+            .eq('id', cmsg_id)
+            .eq('conversation_id', id)
             .single();
 
         if (error) {
@@ -20,7 +21,7 @@ export async function GET(
         }
 
         return NextResponse.json(data);
-    } catch (error) {
+    } catch {
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -30,17 +31,18 @@ export async function GET(
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string; cmsg_id: string } }
+    { params }: { params: Promise<{ id: string; cmsg_id: string }> }
 ) {
     try {
+        const { id, cmsg_id } = await params;
         const supabase = await createClient();
         const body = await request.json();
 
         const { data, error } = await supabase
             .from('conversation_messages')
             .update(body)
-            .eq('id', params.cmsg_id)
-            .eq('conversation_id', params.id)
+            .eq('id', cmsg_id)
+            .eq('conversation_id', id)
             .select()
             .single();
 
@@ -49,7 +51,7 @@ export async function PATCH(
         }
 
         return NextResponse.json(data);
-    } catch (error) {
+    } catch {
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
@@ -59,23 +61,24 @@ export async function PATCH(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string; cmsg_id: string } }
+    { params }: { params: Promise<{ id: string; cmsg_id: string }> }
 ) {
     try {
+        const { id, cmsg_id } = await params;
         const supabase = await createClient();
 
         const { error } = await supabase
             .from('conversation_messages')
             .delete()
-            .eq('id', params.cmsg_id)
-            .eq('conversation_id', params.id);
+            .eq('id', cmsg_id)
+            .eq('conversation_id', id);
 
         if (error) {
             return NextResponse.json({ error: error.message }, { status: 400 });
         }
 
         return NextResponse.json({ success: true }, { status: 200 });
-    } catch (error) {
+    } catch {
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

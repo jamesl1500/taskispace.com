@@ -15,6 +15,10 @@ export function ConversationsList({ conversations }: Props) {
     return null
   }
 
+  const hasLastMessage = (conv: Conversation): conv is Conversation & { last_message: { content: string } } => {
+    return 'last_message' in conv && conv.last_message !== null && typeof conv.last_message === 'object' && 'content' in conv.last_message
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -46,7 +50,7 @@ export function ConversationsList({ conversations }: Props) {
                     {'member_count' in conversation && conversation.member_count !== undefined && (
                       <Badge variant="secondary" className="text-xs gap-1">
                         <Users className="h-3 w-3" />
-                        {conversation.member_count}
+                        {String(conversation.member_count)}
                       </Badge>
                     )}
                   </div>
@@ -57,7 +61,7 @@ export function ConversationsList({ conversations }: Props) {
                     </p>
                   )}
                   
-                  {'last_message' in conversation && conversation.last_message && (
+                  {hasLastMessage(conversation) && (
                     <div className="text-sm text-slate-500 dark:text-slate-500 line-clamp-1">
                       <span className="font-medium">Last:</span> {conversation.last_message.content}
                     </div>

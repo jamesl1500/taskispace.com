@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { TaskTagWithTaskAndTag } from '@/types/tasks'
 
 interface RouteParams {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
