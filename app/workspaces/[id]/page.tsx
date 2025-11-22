@@ -357,187 +357,194 @@ export default function WorkspaceDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex h-screen overflow-hidden">
         {/* Main Content */}
         <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>
-          <div className="container mx-auto p-6 h-full overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <Link href="/workspaces">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Workspaces
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">{workspace?.name}</h1>
-            {workspace?.description && (
-              <p className="text-gray-600 mt-1">{workspace.description}</p>
-            )}
-          </div>
-        </div>
-        <Button onClick={() => setIsCreateListDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New List
-        </Button>
-      </div>
-
-      {/* Lists and Tasks */}
-      {lists.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <ListIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Lists Yet</h3>
-            <p className="text-gray-500 mb-4">Create your first list to start organizing tasks.</p>
-            <Button onClick={() => setIsCreateListDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create First List
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6">
-          {lists.map((list) => (
-            <Card key={list.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
+          <div className="h-full flex flex-col">
+            {/* Header */}
+            <div className="border-b bg-white dark:bg-gray-800 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Link href="/workspaces">
+                    <Button variant="ghost" size="sm">
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back
+                    </Button>
+                  </Link>
                   <div>
-                    <CardTitle className="flex items-center">
-                      <ListIcon className="h-5 w-5 mr-2" />
-                      {list.name}
-                    </CardTitle>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="secondary">
-                      {tasks[list.id]?.length || 0} tasks
-                    </Badge>
-                    <Badge variant="outline">
-                      <Users className="h-3 w-3 mr-1" />
-                      {listMembers[list.id]?.length || 0} members
-                    </Badge>
-                    <Button
-                      size="sm"
-                      onClick={() => openCreateTaskDialog(list.id)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Task
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/lists/${list.id}`)}
-                    >
-                      Manage List
-                    </Button>
+                    <h1 className="text-2xl font-bold">{workspace?.name}</h1>
+                    {workspace?.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{workspace.description}</p>
+                    )}
                   </div>
                 </div>
-              </CardHeader>
-              
-              <CardContent>
-                {tasks[list.id]?.length === 0 ? (
-                  <div className="text-center py-8">
-                    <CheckCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">No tasks in this list yet.</p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => openCreateTaskDialog(list.id)}
-                      className="mt-2"
-                    >
-                      Add first task
+                <Button onClick={() => setIsCreateListDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New List
+                </Button>
+              </div>
+            </div>
+
+            {/* Kanban Board */}
+            {lists.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center p-6">
+                <Card className="w-full max-w-md">
+                  <CardContent className="text-center py-12">
+                    <ListIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Lists Yet</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">Create your first list to start organizing tasks.</p>
+                    <Button onClick={() => setIsCreateListDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First List
                     </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {tasks[list.id]?.map((task) => (
-                      <div
-                        key={task.id}
-                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Checkbox
-                            checked={task.status === TaskStatus.COMPLETED}
-                            onCheckedChange={(checked) =>
-                              handleTaskStatusChange(
-                                task,
-                                checked ? TaskStatus.COMPLETED : TaskStatus.TODO
-                              )
-                            }
-                          />
-                          <div className="flex-1">
-                            <h4 className={`font-medium ${
-                              task.status === TaskStatus.COMPLETED 
-                                ? 'line-through text-gray-500' 
-                                : ''
-                            }`}>
-                              {task.title}
-                            </h4>
-                            {task.description && (
-                              <p className="text-sm text-gray-600 mt-1">
-                                {task.description}
-                              </p>
-                            )}
-                            <div className="flex items-center space-x-2 mt-2">
-                              <Badge
-                                variant={
-                                  task.priority === TaskPriority.HIGH ? 'destructive' :
-                                  task.priority === TaskPriority.MEDIUM ? 'default' :
-                                  'secondary'
-                                }
-                              >
-                                {task.priority}
-                              </Badge>
-                              {task.due_date && (
-                                <Badge variant="outline">
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  {new Date(task.due_date).toLocaleDateString()}
-                                </Badge>
-                              )}
-                              {task.assignee && (
-                                <Badge variant="outline">
-                                  <User className="h-3 w-3 mr-1" />
-                                  Assigned
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
+                <div className="flex gap-4 h-full min-w-min">
+                  {lists.map((list) => (
+                    <div
+                      key={list.id}
+                      className="flex flex-col w-80 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0"
+                    >
+                      {/* List Header */}
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900 dark:text-white flex items-center">
+                            <ListIcon className="h-4 w-4 mr-2" />
+                            {list.name}
+                          </h3>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => router.push(`/lists/${list.id}`)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Manage List
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openViewTaskDialog(task)}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View in Detail
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEditTaskDialog(task)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteTask(task)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                          <Badge variant="secondary" className="text-xs">
+                            {tasks[list.id]?.length || 0} tasks
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            <Users className="h-3 w-3 mr-1" />
+                            {listMembers[list.id]?.length || 0}
+                          </Badge>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+
+                      {/* Tasks List */}
+                      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                        {tasks[list.id]?.length === 0 ? (
+                          <div className="text-center py-8">
+                            <CheckCircle className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-500 dark:text-gray-400">No tasks yet</p>
+                          </div>
+                        ) : (
+                          tasks[list.id]?.map((task) => (
+                            <Card
+                              key={task.id}
+                              className="p-3 cursor-pointer hover:shadow-md transition-shadow bg-white dark:bg-gray-900"
+                              onClick={() => openViewTaskDialog(task)}
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <h4 className={`font-medium text-sm flex-1 ${
+                                    task.status === TaskStatus.COMPLETED 
+                                      ? 'line-through text-gray-500' 
+                                      : 'text-gray-900 dark:text-white'
+                                  }`}>
+                                    {task.title}
+                                  </h4>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                        <MoreVertical className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={(e) => {
+                                        e.stopPropagation()
+                                        openEditTaskDialog(task)
+                                      }}>
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem 
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleDeleteTask(task)
+                                        }}
+                                        className="text-red-600"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+
+                                {task.description && (
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                                    {task.description}
+                                  </p>
+                                )}
+
+                                <div className="flex flex-wrap gap-1.5">
+                                  <Badge
+                                    variant={
+                                      task.priority === TaskPriority.HIGH ? 'destructive' :
+                                      task.priority === TaskPriority.MEDIUM ? 'default' :
+                                      'secondary'
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {task.priority}
+                                  </Badge>
+                                  {task.due_date && (
+                                    <Badge variant="outline" className="text-xs">
+                                      <Calendar className="h-3 w-3 mr-1" />
+                                      {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    </Badge>
+                                  )}
+                                  {task.assignee && (
+                                    <Badge variant="outline" className="text-xs">
+                                      <User className="h-3 w-3 mr-1" />
+                                      Assigned
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </Card>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Add Task Button */}
+                      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-gray-600 dark:text-gray-400"
+                          onClick={() => openCreateTaskDialog(list.id)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Task
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
       {/* Create List Dialog */}
       <Dialog open={isCreateListDialogOpen} onOpenChange={setIsCreateListDialogOpen}>

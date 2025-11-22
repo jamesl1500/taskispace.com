@@ -17,6 +17,7 @@ import { useState } from 'react'
 import { SearchBar } from '@/components/search/SearchBar'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { Jarvis } from './Jarvis'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 
 export default function Header() {
   const { user, profile, loading } = useAuthWithProfile()
@@ -34,135 +35,134 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="flex justify-between items-center h-12">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <span className="text-white font-bold text-xs">T</span>
-            </div>
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white hidden sm:block">
-              TaskiSpace
-            </h1>
-          </Link>
+    <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
+      <div className="px-3 sm:px-4 lg:px-6">
+        <div className="flex justify-between items-center h-14">
+          {/* Left side - Sidebar trigger and Logo */}
+          <div className="flex items-center gap-3">
+            {user && (
+              <>
+                <SidebarTrigger />
+                <Link href="/" className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">T</span>
+                  </div>
+                  <h1 className="text-lg font-bold text-slate-900 dark:text-white hidden sm:block">
+                    TaskiSpace
+                  </h1>
+                </Link>
+              </>
+            )}
+            {!user && (
+              <Link href="/" className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">T</span>
+                </div>
+                <h1 className="text-lg font-bold text-slate-900 dark:text-white hidden sm:block">
+                  TaskiSpace
+                </h1>
+              </Link>
+            )}
+          </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-2">
+          {/* Right side - Search, Notifications, Actions, Profile */}
+          <div className="flex items-center gap-2">
             {loading ? (
               <div className="w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
             ) : user ? (
-              // Authenticated User Navigation
+              // Authenticated User Actions
               <>
-                <nav className="flex space-x-0.5">
-                  <Link href="/timeline">
-                    <Button variant="ghost" size="sm" className="text-xs px-2">
-                      Timeline
-                    </Button>
-                  </Link>
-                  <Link href="/tasks">
-                    <Button variant="ghost" size="sm" className="text-xs px-2">
-                      Tasks
-                    </Button>
-                  </Link>
-                  <Link href="/conversations">
-                    <Button variant="ghost" size="sm" className="text-xs px-2">
-                      Conversations
-                    </Button>
-                  </Link>
-                </nav>
-
-                {/* Search Bar */}
-                <SearchBar />
+                {/* Search Bar - Desktop */}
+                <div className="hidden md:block">
+                  <SearchBar />
+                </div>
 
                 {/* Notifications */}
                 <NotificationBell />
 
                 {/* New button - Opens modal to create new task, workspace, etc. */}
-                <Button variant="outline" size="sm" className="text-xs" onClick={() => setCreateNewOpen(!createNewOpen)}>
-                  <Plus className="h-3 w-3 mr-1" />
-                  New
-                </Button>
+                <div className="relative hidden sm:block">
+                  <Button variant="outline" size="sm" onClick={() => setCreateNewOpen(!createNewOpen)}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    <span className="hidden lg:inline">New</span>
+                  </Button>
 
-                {createNewOpen && (
-                  <div className="absolute top-12 right-20 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 z-50">
-                    <Button variant="ghost" className="w-full text-left text-xs px-2 py-1">
-                      New Task
-                    </Button>
-                    <Button variant="ghost" className="w-full text-left text-xs px-2 py-1">
-                      New Workspace
-                    </Button>
-                  </div>
-                )}
+                  {createNewOpen && (
+                    <div className="absolute top-12 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 z-50 border border-slate-200 dark:border-slate-700">
+                      <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2">
+                        New Task
+                      </Button>
+                      <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2">
+                        New Workspace
+                      </Button>
+                    </div>
+                  )}
+                </div>
 
                 {/* Jarvis AI Bot */}
                 <Jarvis />
 
-                {/* User Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage 
-                          src={profile?.avatar_url || user?.user_metadata?.avatar_url} 
-                          alt={profile?.display_name || user?.user_metadata?.full_name} 
-                        />
-                        <AvatarFallback className="bg-primary text-white text-xs">
-                          {getInitials(
-                            profile?.display_name || 
-                            user?.user_metadata?.full_name || 
-                            user?.email
-                          )}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48" align="end" forceMount>
-                    <div className="p-2">
-                      <p className="text-sm font-medium truncate">
-                        {profile?.display_name || user?.user_metadata?.full_name || 'User'}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {profile ? `@${profile.user_name}` : user?.email}
-                      </p>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href={profile ? `/profiles/${profile.user_name}` : '/profile'}>
-                        <User className="mr-2 h-4 w-4" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/notifications">
-                        <Bell className="mr-2 h-4 w-4" />
-                        Notifications
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* User Menu - Desktop Only */}
+                <div className="hidden lg:block">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage 
+                            src={profile?.avatar_url || user?.user_metadata?.avatar_url} 
+                            alt={profile?.display_name || user?.user_metadata?.full_name} 
+                          />
+                          <AvatarFallback className="bg-primary text-white text-xs">
+                            {getInitials(
+                              profile?.display_name || 
+                              user?.user_metadata?.full_name || 
+                              user?.email
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48" align="end" forceMount>
+                      <div className="p-2">
+                        <p className="text-sm font-medium truncate">
+                          {profile?.display_name || user?.user_metadata?.full_name || 'User'}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {profile ? `@${profile.user_name}` : user?.email}
+                        </p>
+                      </div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href={profile ? `/profiles/${profile.user_name}` : '/profile'}>
+                          <User className="mr-2 h-4 w-4" />
+                          Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/settings">
+                          <Settings className="mr-2 h-4 w-4" />
+                          Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </>
             ) : (
               // Unauthenticated User Navigation
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center gap-2">
                 <Link href="/auth/login">
-                  <Button variant="ghost" size="sm" className="text-xs">
+                  <Button variant="ghost" size="sm">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button size="sm" className="text-xs">
+                  <Button size="sm">
                     Sign Up
                   </Button>
                 </Link>
@@ -170,118 +170,7 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center space-x-2">
-            {user && <NotificationBell />}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-slate-200 dark:border-slate-700 py-2">
-            {loading ? (
-              <div className="flex justify-center py-2">
-                <div className="w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
-              </div>
-            ) : user ? (
-              // Authenticated Mobile Menu
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2 px-3 py-1">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url} alt={profile?.display_name || user.user_metadata?.full_name} />
-                    <AvatarFallback className="bg-primary text-white text-xs">
-                      {getInitials(profile?.display_name || user.user_metadata?.full_name || user.email)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                      {profile?.display_name || user.user_metadata?.full_name || 'User'}
-                    </p>
-                  </div>
-                </div>
-                <nav className="space-y-0.5">
-                  <Link
-                    href="/timeline"
-                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Timeline
-                  </Link>
-                  <Link
-                    href="/workspaces"
-                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Workspaces
-                  </Link>
-                  <Link
-                    href="/tasks"
-                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Tasks
-                  </Link>
-                  <Link
-                    href="/conversations"
-                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Conversations
-                  </Link>
-                  <Link
-                    href="/notifications"
-                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Notifications
-                  </Link>
-                  <Link
-                    href="/settings/profile"
-                    className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Settings
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleSignOut()
-                      setMobileMenuOpen(false)
-                    }}
-                    className="block w-full text-left px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                  >
-                    Sign out
-                  </button>
-                </nav>
-              </div>
-            ) : (
-              // Unauthenticated Mobile Menu
-              <div className="space-y-0.5">
-                <Link
-                  href="/auth/login"
-                  className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="block px-3 py-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-sm"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </header>
   )

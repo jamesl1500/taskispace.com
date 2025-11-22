@@ -78,6 +78,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // Check onboarding status for authenticated and verified users
+  if (user && user.email_confirmed_at) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_name, display_name')
+      .eq('id', user.id)
+      .single()
+
+    // Check if user needs onboarding (auto-generated username or missing profile)
+    const needsOnboarding = !profile?.user_name || profile.user_name.startsWith('user_')
+    const isOnOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding')
+    const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
+
+    // Redirect to onboarding if needed
+    if (needsOnboarding && !isOnOnboardingPage && !isAuthPage) {
+      return NextResponse.redirect(new URL('/onboarding', request.url))
+    }
+
+    // Redirect away from onboarding if already completed
+    if (!needsOnboarding && isOnOnboardingPage) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
   // Redirect authenticated users away from auth pages (except verify-email)
   const authRoutes = ['/auth/login', '/auth/signup', '/auth/forgot-password']
   const isAuthRoute = authRoutes.some(route => 

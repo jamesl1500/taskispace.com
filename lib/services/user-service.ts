@@ -37,7 +37,6 @@ export class UserService {
             throw error
         }
 
-        console.log('UserService - fetched user data:', user, 'error:', error)
         return user
     }
 

@@ -30,9 +30,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import UserAvatar from '@/components/user/UserAvatar'
 import type { Post, PostComment } from '@/types/posts'
+import { useAuthWithProfile } from '@/hooks/useAuth'
 
 export default function FeedPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, profile, loading: authLoading } = useAuthWithProfile()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [newPostContent, setNewPostContent] = useState('')
@@ -87,6 +88,11 @@ export default function FeedPage() {
     } finally {
       setPosting(false)
     }
+  }
+
+  const getInitials = (name: string | undefined) => {
+    if (!name) return 'U'
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
   // Toggle like
@@ -246,7 +252,17 @@ export default function FeedPage() {
           <CardHeader>
             <div className="flex items-start gap-4">
               <Avatar>
-                <UserAvatar userId={user.id} />
+                <AvatarImage 
+                  src={profile?.avatar_url || user?.user_metadata?.avatar_url} 
+                  alt={profile?.display_name || user?.user_metadata?.full_name} 
+                />
+                <AvatarFallback className="bg-primary text-white text-xs">
+                  {getInitials(
+                    profile?.display_name || 
+                    user?.user_metadata?.full_name || 
+                    user?.email
+                  )}
+                </AvatarFallback>
               </Avatar>
               <form onSubmit={handleCreatePost} className="flex-1 space-y-4">
                 <Textarea

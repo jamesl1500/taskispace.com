@@ -121,7 +121,6 @@ export async function POST(request: NextRequest) {
     } else {
       location = 1
     }
-    console.log('Determined list location:', location)
 
     // Create new list
     const { data: newList, error: createError } = await supabase
