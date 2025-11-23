@@ -46,6 +46,9 @@ export default function Header() {
     }
   }, [createNewOpen])
 
+  // Get sidebar open state
+  
+
   const getInitials = (name: string | undefined) => {
     if (!name) return 'U'
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { MessageCircle, Calendar, User } from 'lucide-react'
+import { FriendshipButton } from '@/components/friends'
 import Link from 'next/link'
 
 export default function ProfilePage() {
@@ -113,13 +114,20 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="flex space-x-2">
-              {!isOwnProfile && (
-                <Link href={`/conversations/new?user=${profile.user_name}`}>
-                  <Button>
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Start Conversation
-                  </Button>
-                </Link>
+              {!isOwnProfile && user && (
+                <div className="flex space-x-2">
+                  <Link href={`/conversations/new?user=${profile.user_name}`}>
+                    <Button>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Start Conversation
+                    </Button>
+                  </Link>
+                  <FriendshipButton
+                    username={profile.user_name}
+                    userId={profile.id}
+                    currentUserId={user.id}
+                  />
+                </div>
               )}
               {isOwnProfile && (
                 <Link href="/settings/profile">

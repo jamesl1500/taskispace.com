@@ -728,7 +728,6 @@ export default function WorkspaceDetailPage() {
           task={viewingTask}
           isOpen={isTaskSidePanelOpen}
           onClose={closeTaskSidePanel}
-          onEdit={openEditTaskDialog}
           onDelete={handleDeleteTask}
           onStatusChange={handleTaskStatusChange}
           isOwner={workspace?.owner_id === user?.id}

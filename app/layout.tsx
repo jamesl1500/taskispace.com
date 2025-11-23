@@ -35,7 +35,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <SidebarProvider>
+            <SidebarProvider defaultOpen={false}>
             <AppSidebar />
             <div className="flex-1 flex flex-col w-full">
               <Header />

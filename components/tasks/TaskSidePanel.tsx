@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -31,7 +32,6 @@ interface TaskSidePanelProps {
   task: Task
   isOpen: boolean
   onClose: () => void
-  onEdit: (task: Task) => void
   onDelete: (task: Task) => void
   onStatusChange: (task: Task, status: TaskStatus) => void
   isOwner: boolean
@@ -43,13 +43,13 @@ export default function TaskSidePanel({
   task,
   isOpen,
   onClose,
-  onEdit,
   onDelete,
   onStatusChange,
   isOwner,
   canEdit,
   workspaceId
 }: TaskSidePanelProps) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
 
   const handleStatusToggle = useCallback(() => {
@@ -145,7 +145,7 @@ export default function TaskSidePanel({
                 <Button 
                   size="sm"
                   variant="outline"
-                  onClick={() => onEdit(task)}
+                  onClick={() => router.push(`/tasks/edit?id=${task.id}`)}
                 >
                   <Edit className="h-4 w-4 mr-1" />
                   Edit

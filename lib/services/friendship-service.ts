@@ -644,6 +644,30 @@ export class FriendshipService {
 
     return tasks || []
   }
+
+  /**
+   * Get friendship Status
+   * 
+   * @param userId - User ID of the other user
+   * @returns Friendship status or null if not friends
+   */
+  async getFriendshipStatus(userId: string): Promise<'pending' | 'accepted' | 'rejected' | null> {
+    const supabase = await createClient()
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      throw new Error('Not authenticated')
+    }
+
+    const { data: friendship } = await supabase
+      .from('friendships')
+      .select('status')
+      .or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`)
+      .single()
+
+    return friendship ? friendship.status as 'pending' | 'accepted' | 'rejected' : null
+  }
 }
 
 // Export a singleton instance

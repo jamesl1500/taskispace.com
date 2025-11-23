@@ -51,11 +51,6 @@ export default function TaskDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [isPanelOpen, setIsPanelOpen] = useState(false)
 
-  const handleEditTask = (task: Task) => {
-    // For now, we can just update the task state or navigate to edit page
-    console.log('Edit task:', task)
-  }
-
   const handleDeleteTask = async (task: Task) => {
     try {
       const response = await fetch(`/api/tasks/${task.id}`, {
@@ -514,7 +509,6 @@ export default function TaskDetailPage() {
             task={task}
             isOpen={isPanelOpen}
             onClose={() => setIsPanelOpen(false)}
-            onEdit={handleEditTask}
             onDelete={handleDeleteTask}
             onStatusChange={handleTaskStatusChange}
             isOwner={task.workspace?.owner_id === user?.id}
