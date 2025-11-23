@@ -12,8 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { User, LogOut, Settings, Plus, Menu, Bell } from 'lucide-react'
-import { useState } from 'react'
+import { User, LogOut, Settings, Plus } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { SearchBar } from '@/components/search/SearchBar'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { Jarvis } from './Jarvis'
@@ -22,12 +22,29 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 export default function Header() {
   const { user, profile, loading } = useAuthWithProfile()
   const { mutate: signOut } = useSignOut()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [createNewOpen, setCreateNewOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const handleSignOut = () => {
     signOut()
   }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setCreateNewOpen(false)
+      }
+    }
+
+    if (createNewOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [createNewOpen])
 
   const getInitials = (name: string | undefined) => {
     if (!name) return 'U'
@@ -39,8 +56,21 @@ export default function Header() {
       <div className="px-3 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-14">
           {/* Left side - Sidebar trigger and Logo */}
-          <div className="flex items-center gap-3">
-            {user && (
+          <div className="flex items-center gap-3 min-w-0">
+            {loading ? (
+              // Loading state - preserve layout
+              <>
+                <div className="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-md animate-pulse"></div>
+                <Link href="/" className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">T</span>
+                  </div>
+                  <h1 className="text-lg font-bold text-slate-900 dark:text-white hidden sm:block">
+                    TaskiSpace
+                  </h1>
+                </Link>
+              </>
+            ) : user ? (
               <>
                 <SidebarTrigger />
                 <Link href="/" className="flex items-center gap-2">
@@ -52,8 +82,7 @@ export default function Header() {
                   </h1>
                 </Link>
               </>
-            )}
-            {!user && (
+            ) : (
               <Link href="/" className="flex items-center space-x-2">
                 <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
                   <span className="text-white font-bold text-xs">T</span>
@@ -68,7 +97,14 @@ export default function Header() {
           {/* Right side - Search, Notifications, Actions, Profile */}
           <div className="flex items-center gap-2">
             {loading ? (
-              <div className="w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+              // Loading skeleton for right side
+              <div className="flex items-center gap-2">
+                <div className="hidden md:block w-48 h-9 bg-slate-200 dark:bg-slate-700 rounded-md animate-pulse"></div>
+                <div className="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+                <div className="hidden sm:block w-16 h-9 bg-slate-200 dark:bg-slate-700 rounded-md animate-pulse"></div>
+                <div className="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+                <div className="hidden lg:block w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+              </div>
             ) : user ? (
               // Authenticated User Actions
               <>
@@ -81,7 +117,7 @@ export default function Header() {
                 <NotificationBell />
 
                 {/* New button - Opens modal to create new task, workspace, etc. */}
-                <div className="relative hidden sm:block">
+                <div className="relative hidden sm:block" ref={dropdownRef}>
                   <Button variant="outline" size="sm" onClick={() => setCreateNewOpen(!createNewOpen)}>
                     <Plus className="h-4 w-4 mr-1" />
                     <span className="hidden lg:inline">New</span>
@@ -89,12 +125,16 @@ export default function Header() {
 
                   {createNewOpen && (
                     <div className="absolute top-12 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 z-50 border border-slate-200 dark:border-slate-700">
-                      <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2">
-                        New Task
-                      </Button>
-                      <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2">
-                        New Workspace
-                      </Button>
+                      <Link href="/tasks/new" onClick={() => setCreateNewOpen(false)}>
+                        <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2">
+                          New Task
+                        </Button>
+                      </Link>
+                      <Link href="/workspaces/new" onClick={() => setCreateNewOpen(false)}>
+                        <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2">
+                          New Workspace
+                        </Button>
+                      </Link>
                     </div>
                   )}
                 </div>
@@ -108,14 +148,14 @@ export default function Header() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
                         <Avatar className="h-9 w-9">
-                          <AvatarImage 
-                            src={profile?.avatar_url || user?.user_metadata?.avatar_url} 
-                            alt={profile?.display_name || user?.user_metadata?.full_name} 
+                          <AvatarImage
+                            src={profile?.avatar_url || user?.user_metadata?.avatar_url}
+                            alt={profile?.display_name || user?.user_metadata?.full_name}
                           />
                           <AvatarFallback className="bg-primary text-white text-xs">
                             {getInitials(
-                              profile?.display_name || 
-                              user?.user_metadata?.full_name || 
+                              profile?.display_name ||
+                              user?.user_metadata?.full_name ||
                               user?.email
                             )}
                           </AvatarFallback>
