@@ -16,6 +16,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { UserService } from '@/lib/services/user-service'
 import Image from 'next/image'
+import { AvatarImage } from '@/components/ui/avatar'
 
 interface UserAvatarProps {
   userId: string
@@ -49,7 +50,7 @@ export default function UserAvatar({ userId, size = 40 }: UserAvatarProps) {
   const avatarUrl = user.avatar_url || '/default_avatar.jpg'
 
   return (
-    <Image
+    <AvatarImage
       src={avatarUrl}
       alt={`${user?.display_name}'s avatar`}
       width={size}

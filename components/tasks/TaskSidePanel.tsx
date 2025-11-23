@@ -177,7 +177,7 @@ export default function TaskSidePanel({
         {/* Content */}
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <div className="flex-shrink-0 border-b border-gray-200 px-6">
+            <div className="flex-shrink-0 border-b border-gray-200 px-6 bg-gray-100">
               <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="overview" className="text-xs">
                   <User className="h-3 w-3 mr-1" />

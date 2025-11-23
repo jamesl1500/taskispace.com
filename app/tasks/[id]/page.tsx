@@ -280,7 +280,7 @@ export default function TaskDetailPage() {
     <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
       <div className="flex">
         {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ${isPanelOpen ? 'mr-[600px]' : ''}`}>
+        <div className={`flex-1`}>
           <div className="p-6">
             <div className="max-w-4xl mx-auto space-y-6">
               {/* Header */}
@@ -507,8 +507,8 @@ export default function TaskDetailPage() {
             </div>
           </div>
         </div>
-
-        {/* Task Side Panel */}
+      </div>
+      {/* Task Side Panel */}
         {isPanelOpen && task && (
           <TaskSidePanel
             task={task}
@@ -522,7 +522,6 @@ export default function TaskDetailPage() {
             workspaceId={task.workspace?.id || ''}
           />
         )}
-      </div>
     </div>
   )
 }
