@@ -25,7 +25,6 @@ import {
   User,
   List as ListIcon,
   Users,
-  Eye
 } from 'lucide-react'
 import Link from 'next/link'
 import { Workspace } from '@/types/workspaces'
@@ -358,34 +357,34 @@ export default function WorkspaceDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex h-screen overflow-hidden">
-        {/* Main Content */}
-        <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>
-          <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="border-b bg-white dark:bg-gray-800 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Link href="/workspaces">
-                    <Button variant="ghost" size="sm">
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back
-                    </Button>
-                  </Link>
-                  <div>
-                    <h1 className="text-2xl font-bold">{workspace?.name}</h1>
-                    {workspace?.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{workspace.description}</p>
-                    )}
-                  </div>
-                </div>
-                <Button onClick={() => setIsCreateListDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New List
+      <div className="h-screen flex flex-col">
+        {/* Header */}
+        <div className="border-b bg-white dark:bg-gray-800 px-6 py-4 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link href="/workspaces">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
                 </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold">{workspace?.name}</h1>
+                {workspace?.description && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{workspace.description}</p>
+                )}
               </div>
             </div>
+            <Button onClick={() => setIsCreateListDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New List
+            </Button>
+          </div>
+        </div>
 
+        {/* Main Content Area */}
+        <div className="flex flex-1 overflow-y-hidden">
+          <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>
             {/* Kanban Board */}
             {lists.length === 0 ? (
               <div className="flex-1 flex items-center justify-center p-6">
@@ -402,13 +401,13 @@ export default function WorkspaceDetailPage() {
                 </Card>
               </div>
             ) : (
-              <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
-                <div className="flex gap-4 h-full min-w-min">
-                  {lists.map((list) => (
-                    <div
-                      key={list.id}
-                      className="flex flex-col w-80 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0"
-                    >
+              <div className="flex-1 overflow-x-auto p-6">
+                <div className="flex gap-4 pb-4 h-full">
+                {lists.map((list) => (
+                  <div
+                    key={list.id}
+                    className="flex flex-col w-80 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0 shadow-md border border-gray-300 dark:border-gray-700 h-[calc(100vh-180px)]"
+                  >
                       {/* List Header */}
                       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between mb-2">
@@ -545,9 +544,25 @@ export default function WorkspaceDetailPage() {
                 </div>
               </div>
             )}
+          </div>
 
-      {/* Create List Dialog */}
-      <Dialog open={isCreateListDialogOpen} onOpenChange={setIsCreateListDialogOpen}>
+          {/* Task Side Panel */}
+          {viewingTask && (
+            <TaskSidePanel
+              task={viewingTask}
+              isOpen={isTaskSidePanelOpen}
+              onClose={closeTaskSidePanel}
+              onDelete={handleDeleteTask}
+              onStatusChange={handleTaskStatusChange}
+              isOwner={workspace?.owner_id === user?.id}
+              canEdit={workspace?.owner_id === user?.id || viewingTask.created_by === user?.id}
+              workspaceId={params.id as string}
+            />
+          )}
+        </div>
+
+        {/* Create List Dialog */}
+        <Dialog open={isCreateListDialogOpen} onOpenChange={setIsCreateListDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New List</DialogTitle>
@@ -718,24 +733,7 @@ export default function WorkspaceDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-        </div>
       </div>
-
-      {/* Task Side Panel */}
-      {viewingTask && (
-        <TaskSidePanel
-          task={viewingTask}
-          isOpen={isTaskSidePanelOpen}
-          onClose={closeTaskSidePanel}
-          onDelete={handleDeleteTask}
-          onStatusChange={handleTaskStatusChange}
-          isOwner={workspace?.owner_id === user?.id}
-          canEdit={workspace?.owner_id === user?.id || viewingTask.created_by === user?.id} // Add proper permission logic later
-          workspaceId={params.id as string}
-        />
-      )}
     </div>
-      </div>
   )
 }

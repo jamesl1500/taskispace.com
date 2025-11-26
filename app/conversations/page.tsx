@@ -24,16 +24,16 @@ export default function ConversationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:bg-gray-900">
       <main className="p-4 max-w-4xl mx-auto w-full">
         <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Conversations</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent">Conversations</h1>
+          <p className="text-gray-700 dark:text-slate-400 mt-1">
             Connect and collaborate with your team
           </p>
         </div>
-        <Button onClick={handleCreateClick} className="gap-2">
+        <Button onClick={handleCreateClick} className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg">
           <Plus className="h-4 w-4" />
           New Conversation
         </Button>

@@ -47,7 +47,7 @@ export default function Header() {
   }, [createNewOpen])
 
   // Get sidebar open state
-  
+
 
   const getInitials = (name: string | undefined) => {
     if (!name) return 'U'
@@ -55,7 +55,7 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
+    <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border-b border-purple-100 dark:border-slate-700 sticky top-0 z-40">
       <div className="px-3 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-14">
           {/* Left side - Sidebar trigger and Logo */}
@@ -63,12 +63,12 @@ export default function Header() {
             {loading ? (
               // Loading state - preserve layout
               <>
-                <div className="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-md animate-pulse"></div>
+                <div className="w-9 h-9 bg-purple-100 dark:bg-slate-700 rounded-md animate-pulse"></div>
                 <Link href="/" className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
+                  <div className="w-7 h-7 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
                     <span className="text-white font-bold text-sm">T</span>
                   </div>
-                  <h1 className="text-lg font-bold text-slate-900 dark:text-white hidden sm:block">
+                  <h1 className="text-lg font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent hidden sm:block">
                     TaskiSpace
                   </h1>
                 </Link>
@@ -77,20 +77,20 @@ export default function Header() {
               <>
                 <SidebarTrigger />
                 <Link href="/" className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
+                  <div className="w-7 h-7 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
                     <span className="text-white font-bold text-sm">T</span>
                   </div>
-                  <h1 className="text-lg font-bold text-slate-900 dark:text-white hidden sm:block">
+                  <h1 className="text-lg font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent hidden sm:block">
                     TaskiSpace
                   </h1>
                 </Link>
               </>
             ) : (
               <Link href="/" className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                <div className="w-6 h-6 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 rounded flex items-center justify-center shadow-md">
                   <span className="text-white font-bold text-xs">T</span>
                 </div>
-                <h1 className="text-lg font-bold text-slate-900 dark:text-white hidden sm:block">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent hidden sm:block">
                   TaskiSpace
                 </h1>
               </Link>
@@ -121,20 +121,24 @@ export default function Header() {
 
                 {/* New button - Opens modal to create new task, workspace, etc. */}
                 <div className="relative hidden sm:block" ref={dropdownRef}>
-                  <Button variant="outline" size="sm" onClick={() => setCreateNewOpen(!createNewOpen)}>
+                  <Button 
+                    size="sm" 
+                    onClick={() => setCreateNewOpen(!createNewOpen)}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
+                  >
                     <Plus className="h-4 w-4 mr-1" />
                     <span className="hidden lg:inline">New</span>
                   </Button>
 
                   {createNewOpen && (
-                    <div className="absolute top-12 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 z-50 border border-slate-200 dark:border-slate-700">
+                    <div className="absolute top-12 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-xl py-1 z-50 border border-purple-100 dark:border-slate-700">
                       <Link href="/tasks/new" onClick={() => setCreateNewOpen(false)}>
-                        <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2">
+                        <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2 hover:bg-purple-50">
                           New Task
                         </Button>
                       </Link>
                       <Link href="/workspaces/new" onClick={() => setCreateNewOpen(false)}>
-                        <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2">
+                        <Button variant="ghost" className="w-full text-left justify-start text-sm px-3 py-2 hover:bg-purple-50">
                           New Workspace
                         </Button>
                       </Link>
@@ -155,7 +159,7 @@ export default function Header() {
                             src={profile?.avatar_url || user?.user_metadata?.avatar_url}
                             alt={profile?.display_name || user?.user_metadata?.full_name}
                           />
-                          <AvatarFallback className="bg-primary text-white text-xs">
+                          <AvatarFallback className="bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 text-white text-xs">
                             {getInitials(
                               profile?.display_name ||
                               user?.user_metadata?.full_name ||
@@ -200,12 +204,12 @@ export default function Header() {
               // Unauthenticated User Navigation
               <div className="flex items-center gap-2">
                 <Link href="/auth/login">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="text-purple-700 hover:text-purple-800 hover:bg-purple-50">
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button size="sm">
+                  <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md">
                     Sign Up
                   </Button>
                 </Link>

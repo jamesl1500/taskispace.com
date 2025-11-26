@@ -131,25 +131,29 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-none">
-        <CardHeader>
-          <CardTitle className="text-2xl">Discover the Community</CardTitle>
-          <CardDescription className="text-blue-100">
-            Connect with new members and see what everyone is working on
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* New Members */}
-        <Card>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className="mx-auto space-y-6">
+        {/* Top Banner */}
+        <Card className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 text-white border-none shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              New Members
+            <CardTitle className="text-3xl flex items-center gap-3">
+              <Users className="h-8 w-8" />
+              Discover the Community
             </CardTitle>
+            <CardDescription className="text-purple-100 text-lg">
+              Connect with new members and see what everyone is working on
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* New Members */}
+          <Card className="border-purple-100 bg-white/80 backdrop-blur-sm shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-400">
+                <UserPlus className="h-5 w-5" />
+                New Members
+              </CardTitle>
             <CardDescription>Welcome the newest members of the community</CardDescription>
           </CardHeader>
           <CardContent>
@@ -202,13 +206,13 @@ export default function ExplorePage() {
           </CardContent>
         </Card>
 
-        {/* Most Active Users */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Most Active
-            </CardTitle>
+          {/* Most Active Users */}
+          <Card className="border-pink-100 bg-white/80 backdrop-blur-sm shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-pink-700 dark:text-pink-400">
+                <TrendingUp className="h-5 w-5" />
+                Most Active
+              </CardTitle>
             <CardDescription>Users who are crushing it this week</CardDescription>
           </CardHeader>
           <CardContent>
@@ -345,21 +349,22 @@ export default function ExplorePage() {
         </CardContent>
       </Card>
 
-      {/* Suggestions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Suggested Connections
-          </CardTitle>
-          <CardDescription>People you might want to connect with</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Coming soon! We&apos;ll suggest connections based on shared interests and workspaces.
-          </p>
-        </CardContent>
-      </Card>
+        {/* Suggestions */}
+        <Card className="border-orange-100 bg-white/80 backdrop-blur-sm shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+              <Users className="h-5 w-5" />
+              Suggested Connections
+            </CardTitle>
+            <CardDescription>People you might want to connect with</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Coming soon! We&apos;ll suggest connections based on shared interests and workspaces.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

@@ -162,21 +162,24 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent mb-2">
             All Tasks
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-gray-700 dark:text-slate-400">
             View and manage all your tasks across workspaces
           </p>
         </div>
 
         {/* Filters */}
-        <Card className="mb-6">
+        <Card className="mb-6 border-purple-100 bg-white/80 backdrop-blur-sm shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">Filter & Search</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Search className="h-5 w-5 text-purple-600" />
+              Filter & Search
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -265,25 +268,25 @@ export default function TasksPage() {
         {/* Tasks List */}
         <div className="space-y-4">
           {filteredAndSortedTasks.length === 0 ? (
-            <Card>
+            <Card className="border-purple-100 bg-white/80 backdrop-blur-sm">
               <CardContent className="py-12 text-center">
-                <CheckCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                <CheckCircle className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   No tasks found
                 </h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                <p className="text-gray-600 dark:text-slate-400 mb-4">
                   {filters.search || filters.status || filters.priority 
                     ? "No tasks match your current filters." 
                     : "You don't have any tasks yet."}
                 </p>
                 <Link href="/workspaces">
-                  <Button>View Workspaces</Button>
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">View Workspaces</Button>
                 </Link>
               </CardContent>
             </Card>
           ) : (
             filteredAndSortedTasks.map((task) => (
-              <Card key={task.id} className="hover:shadow-md transition-shadow">
+              <Card key={task.id} className="hover:shadow-xl transition-all border-purple-100 bg-white/80 backdrop-blur-sm">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">

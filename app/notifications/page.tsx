@@ -61,13 +61,13 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:bg-gray-900">
       <div className="container mx-auto py-8 space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Notifications</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent">Notifications</h1>
+          <p className="text-gray-700 dark:text-muted-foreground">
             Stay updated with your tasks and collaborations
           </p>
         </div>

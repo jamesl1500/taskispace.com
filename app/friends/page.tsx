@@ -17,20 +17,20 @@ export default function FriendsPage() {
   const { data: friends } = useFriends()
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
+    <div className="container mx-auto py-8 px-4 max-w-6xl bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:bg-gray-900 min-h-screen">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Friends</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent mb-2">Friends</h1>
+        <p className="text-gray-700 dark:text-muted-foreground">
           Connect with friends, manage friend requests, and track productivity together
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card>
+        <Card className="border-purple-100 bg-white/80 backdrop-blur-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-600" />
+              <Users className="h-4 w-4 text-purple-600" />
               Friends
             </CardTitle>
           </CardHeader>
@@ -42,10 +42,10 @@ export default function FriendsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-pink-100 bg-white/80 backdrop-blur-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-green-600" />
+              <UserPlus className="h-4 w-4 text-pink-600" />
               Pending Requests
             </CardTitle>
           </CardHeader>
@@ -57,10 +57,10 @@ export default function FriendsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-orange-100 bg-white/80 backdrop-blur-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Search className="h-4 w-4 text-purple-600" />
+              <Search className="h-4 w-4 text-orange-600" />
               Find Friends
             </CardTitle>
           </CardHeader>

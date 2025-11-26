@@ -93,10 +93,10 @@ export default function WorkspacesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:bg-gray-900 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+            <div className="h-8 bg-purple-200 dark:bg-slate-700 rounded w-1/3"></div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-48 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
@@ -221,21 +221,21 @@ export default function WorkspacesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent">
               Workspaces
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-gray-700 dark:text-slate-400">
               Organize your tasks into focused workspaces
             </p>
           </div>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Workspace
               </Button>
@@ -294,10 +294,10 @@ export default function WorkspacesPage() {
         </div>
 
         {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-lg border">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white/80 backdrop-blur-sm dark:bg-slate-800 p-4 rounded-lg border border-purple-100 shadow-lg">
           <div className="flex-1 max-w-md">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-purple-500" />
               <Input
                 placeholder="Search workspaces..."
                 value={filters.search}
@@ -353,7 +353,7 @@ export default function WorkspacesPage() {
         {!isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {workspaces.map((workspace) => (
-              <Card key={workspace.id} className="hover:shadow-lg transition-shadow">
+              <Card key={workspace.id} className="hover:shadow-xl transition-all border-purple-100 bg-white/80 backdrop-blur-sm group hover:scale-105">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">

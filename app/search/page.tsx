@@ -64,21 +64,24 @@ function SearchPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent mb-2">
             Search
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-gray-700 dark:text-slate-400">
             Search across your workspaces, tasks, and more
           </p>
         </div>
 
         {/* Search Form */}
-        <Card className="mb-6">
+        <Card className="mb-6 border-purple-100 bg-white/80 backdrop-blur-sm shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">Search Query</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Search className="h-5 w-5 text-purple-600" />
+              Search Query
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4">

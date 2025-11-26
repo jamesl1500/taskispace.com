@@ -150,14 +150,16 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <Card className="max-w-md mx-auto">
-        <CardContent className="pt-6 text-center">
-          <p className="mb-4">Please log in to view your dashboard</p>
-          <Link href="/auth/login">
-            <Button>Log In</Button>
-          </Link>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 flex items-center justify-center">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="pt-6 text-center">
+            <p className="mb-4">Please log in to view your dashboard</p>
+            <Link href="/auth/login">
+              <Button>Log In</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
@@ -441,22 +443,23 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Reset Button */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Your Dashboard</h2>
-          <p className="text-muted-foreground">Drag and drop cards to customize your layout</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className="mx-auto space-y-6">
+        {/* Header with Reset Button */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent mb-2">Your Dashboard</h2>
+            <p className="text-gray-600 dark:text-gray-400">Drag and drop cards to customize your layout</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={resetCardOrder} className="border-purple-200 hover:bg-purple-50 dark:hover:bg-purple-950">
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset Layout
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={resetCardOrder}>
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Reset Layout
-        </Button>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-purple-100 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
             <ListTodo className="h-4 w-4 text-muted-foreground" />
@@ -469,47 +472,48 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedToday}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Great progress!
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="border-pink-100 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed Today</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{completedToday}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Great progress!
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card className={overdueTasks.length > 0 ? "border-red-200 dark:border-red-900" : ""}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <AlertTriangle className={`h-4 w-4 ${overdueTasks.length > 0 ? 'text-red-600' : 'text-muted-foreground'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overdueTasks.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {overdueTasks.length > 0 ? 'Needs attention' : 'All on track'}
-            </p>
-          </CardContent>
-        </Card>
+          <Card className={`${overdueTasks.length > 0 ? "border-red-200 dark:border-red-900" : "border-orange-100"} bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+              <AlertTriangle className={`h-4 w-4 ${overdueTasks.length > 0 ? 'text-red-600' : 'text-muted-foreground'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{overdueTasks.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {overdueTasks.length > 0 ? 'Needs attention' : 'All on track'}
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completionRate}%</div>
-            <Progress value={completionRate} className="h-2 mt-2" />
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="border-purple-100 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{completionRate}%</div>
+              <Progress value={completionRate} className="h-2 mt-2" />
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Draggable Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {cardOrder.map((cardType) => renderCard(cardType))}
+        {/* Draggable Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {cardOrder.map((cardType) => renderCard(cardType))}
+        </div>
       </div>
     </div>
   )

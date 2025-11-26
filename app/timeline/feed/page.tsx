@@ -8,9 +8,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  Heart, 
-  MessageCircle, 
+import {
+  Heart,
+  MessageCircle,
   Send,
   Loader2,
   Trash2,
@@ -103,13 +103,13 @@ export default function FeedPage() {
       })
 
       if (response.ok) {
-        setPosts(posts.map(post => 
-          post.id === postId 
-            ? { 
-                ...post, 
-                is_liked: !isLiked,
-                likes_count: (post.likes_count || 0) + (isLiked ? -1 : 1)
-              }
+        setPosts(posts.map(post =>
+          post.id === postId
+            ? {
+              ...post,
+              is_liked: !isLiked,
+              likes_count: (post.likes_count || 0) + (isLiked ? -1 : 1)
+            }
             : post
         ))
       }
@@ -244,266 +244,280 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Main Feed - Left/Center Column */}
-      <div className="lg:col-span-2 space-y-6">
-        {/* Create Post */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-start gap-4">
-              <Avatar>
-                <AvatarImage 
-                  src={profile?.avatar_url || user?.user_metadata?.avatar_url} 
-                  alt={profile?.display_name || user?.user_metadata?.full_name} 
-                />
-                <AvatarFallback className="bg-primary text-white text-xs">
-                  {getInitials(
-                    profile?.display_name || 
-                    user?.user_metadata?.full_name || 
-                    user?.email
-                  )}
-                </AvatarFallback>
-              </Avatar>
-              <form onSubmit={handleCreatePost} className="flex-1 space-y-4">
-                <Textarea
-                  placeholder="What's on your mind? Share your thoughts, progress, or achievements..."
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  rows={4}
-                  maxLength={5000}
-                  className="resize-none"
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">
-                    {newPostContent.length}/5000
-                  </span>
-                  <Button 
-                    type="submit" 
-                    disabled={posting || !newPostContent.trim()}
-                  >
-                    {posting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Posting...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="mr-2 h-4 w-4" />
-                        Post
-                      </>
-                    )}
-                  </Button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className=" mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent mb-2">
+            Your Feed
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">Stay connected with your community</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Feed - Left/Center Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Create Post */}
+            <Card className="shadow-md border-purple-100 bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <h2 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">Create a Post</h2>
+                <div className="flex items-start gap-4">
+                  <Avatar>
+                    <AvatarImage
+                      src={profile?.avatar_url || user?.user_metadata?.avatar_url}
+                      alt={profile?.display_name || user?.user_metadata?.full_name}
+                    />
+                    <AvatarFallback className="bg-primary text-white text-xs">
+                      {getInitials(
+                        profile?.display_name ||
+                        user?.user_metadata?.full_name ||
+                        user?.email
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  <form onSubmit={handleCreatePost} className="flex-1 space-y-4">
+                    <Textarea
+                      placeholder="What's on your mind? Share your thoughts, progress, or achievements..."
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      rows={4}
+                      maxLength={5000}
+                      className="resize-none"
+                    />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">
+                        {newPostContent.length}/5000
+                      </span>
+                      <Button
+                        type="submit"
+                        disabled={posting || !newPostContent.trim()}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                      >
+                        {posting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Posting...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-4 w-4" />
+                            Post
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
                 </div>
-              </form>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Posts Feed */}
-        <div className="space-y-6">
-          {posts.length === 0 ? (
-            <Card>
-              <CardContent className="pt-12 pb-12 text-center text-muted-foreground">
-                <MessageCircle className="h-16 w-16 mx-auto mb-4 text-slate-300 dark:text-slate-700" />
-                <p className="text-lg font-semibold mb-2">No posts yet</p>
-                <p>Be the first to share something with the community!</p>
-              </CardContent>
+              </CardHeader>
             </Card>
-          ) : (
-            posts.map((post) => (
-              <Card key={post.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <Link href={`/profiles/${post.profiles?.user_name}`}>
-                        <Avatar className="hover:opacity-80 transition-opacity">
-                          <AvatarImage src={post.profiles?.avatar_url || undefined} />
-                          <AvatarFallback>
-                            {post.profiles?.display_name?.charAt(0) || 
-                             post.profiles?.user_name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Link>
-                      <div>
-                        <Link href={`/profiles/${post.profiles?.user_name}`}>
-                          <p className="font-semibold hover:underline">
-                            {post.profiles?.display_name || post.profiles?.user_name}
-                          </p>
-                        </Link>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                          {post.updated_at !== post.created_at && ' (edited)'}
-                        </p>
-                      </div>
-                    </div>
-                    {post.user_id === user.id && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
-                            setEditingPostId(post.id)
-                            setEditContent(post.content)
-                          }}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDelete(post.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {editingPostId === post.id ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        rows={4}
-                        maxLength={5000}
-                      />
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleUpdate(post.id)}>
-                          <Check className="mr-2 h-4 w-4" />
-                          Save
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => {
-                            setEditingPostId(null)
-                            setEditContent('')
-                          }}
-                        >
-                          <X className="mr-2 h-4 w-4" />
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="whitespace-pre-wrap text-base leading-relaxed">{post.content}</p>
-                  )}
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-6 pt-2 border-t">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleLike(post.id, post.is_liked || false)}
-                      className={post.is_liked ? 'text-red-500' : ''}
-                    >
-                      <Heart className={`mr-2 h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`} />
-                      {post.likes_count || 0}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleComments(post.id)}
-                    >
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      {post.comments_count || 0}
-                    </Button>
-                  </div>
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-                  {/* Comments Section */}
-                  {showComments === post.id && (
-                    <div className="space-y-4 pt-4 border-t">
-                      {/* Add Comment */}
-                      <div className="flex gap-2">
-                        <Textarea
-                          placeholder="Write a comment..."
-                          value={commentContent[post.id] || ''}
-                          onChange={(e) => setCommentContent({
-                            ...commentContent,
-                            [post.id]: e.target.value
-                          })}
-                          rows={2}
-                          maxLength={1000}
-                          className="resize-none"
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => handleAddComment(post.id)}
-                          disabled={!commentContent[post.id]?.trim()}
-                        >
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {/* Comments List */}
-                      <div className="space-y-3">
-                        {comments[post.id]?.map((comment) => (
-                          <div key={comment.id} className="flex gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={comment.profiles?.avatar_url || undefined} />
+            {/* Posts Feed */}
+            <div className="space-y-6">
+              {posts.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-12 pb-12 text-center text-muted-foreground">
+                    <MessageCircle className="h-16 w-16 mx-auto mb-4 text-slate-300 dark:text-slate-700" />
+                    <p className="text-lg font-semibold mb-2">No posts yet</p>
+                    <p>Be the first to share something with the community!</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                posts.map((post) => (
+                  <Card key={post.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3">
+                          <Link href={`/profiles/${post.profiles?.user_name}`}>
+                            <Avatar className="hover:opacity-80 transition-opacity">
+                              <AvatarImage src={post.profiles?.avatar_url || undefined} />
                               <AvatarFallback>
-                                {comment.profiles?.display_name?.charAt(0) ||
-                                 comment.profiles?.user_name.charAt(0).toUpperCase()}
+                                {post.profiles?.display_name?.charAt(0) ||
+                                  post.profiles?.user_name.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="flex-1 bg-muted rounded-lg p-3">
-                              <Link href={`/profiles/${comment.profiles?.user_name}`}>
-                                <p className="font-semibold text-sm hover:underline">
-                                  {comment.profiles?.display_name || comment.profiles?.user_name}
-                                </p>
-                              </Link>
-                              <p className="text-sm mt-1">{comment.content}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                          </Link>
+                          <div>
+                            <Link href={`/profiles/${post.profiles?.user_name}`}>
+                              <p className="font-semibold hover:underline">
+                                {post.profiles?.display_name || post.profiles?.user_name}
                               </p>
-                            </div>
+                            </Link>
+                            <p className="text-sm text-muted-foreground">
+                              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                              {post.updated_at !== post.created_at && ' (edited)'}
+                            </p>
                           </div>
-                        ))}
+                        </div>
+                        {post.user_id === user.id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setEditingPostId(post.id)
+                                setEditContent(post.content)
+                              }}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(post.id)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          )}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {editingPostId === post.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            rows={4}
+                            maxLength={5000}
+                          />
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => handleUpdate(post.id)}>
+                              <Check className="mr-2 h-4 w-4" />
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingPostId(null)
+                                setEditContent('')
+                              }}
+                            >
+                              <X className="mr-2 h-4 w-4" />
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap text-base leading-relaxed">{post.content}</p>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-6 pt-2 border-t">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleLike(post.id, post.is_liked || false)}
+                          className={post.is_liked ? 'text-red-500' : ''}
+                        >
+                          <Heart className={`mr-2 h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`} />
+                          {post.likes_count || 0}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleComments(post.id)}
+                        >
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          {post.comments_count || 0}
+                        </Button>
+                      </div>
+
+                      {/* Comments Section */}
+                      {showComments === post.id && (
+                        <div className="space-y-4 pt-4 border-t">
+                          {/* Add Comment */}
+                          <div className="flex gap-2">
+                            <Textarea
+                              placeholder="Write a comment..."
+                              value={commentContent[post.id] || ''}
+                              onChange={(e) => setCommentContent({
+                                ...commentContent,
+                                [post.id]: e.target.value
+                              })}
+                              rows={2}
+                              maxLength={1000}
+                              className="resize-none"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => handleAddComment(post.id)}
+                              disabled={!commentContent[post.id]?.trim()}
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          {/* Comments List */}
+                          <div className="space-y-3">
+                            {comments[post.id]?.map((comment) => (
+                              <div key={comment.id} className="flex gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={comment.profiles?.avatar_url || undefined} />
+                                  <AvatarFallback>
+                                    {comment.profiles?.display_name?.charAt(0) ||
+                                      comment.profiles?.user_name.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 bg-muted rounded-lg p-3">
+                                  <Link href={`/profiles/${comment.profiles?.user_name}`}>
+                                    <p className="font-semibold text-sm hover:underline">
+                                      {comment.profiles?.display_name || comment.profiles?.user_name}
+                                    </p>
+                                  </Link>
+                                  <p className="text-sm mt-1">{comment.content}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar - Right Column */}
+          <div className="space-y-6">
+            <Card className="border-orange-100 bg-white/80 backdrop-blur-sm shadow-lg">
+              <CardHeader>
+                <h3 className="font-semibold text-orange-700 dark:text-orange-400">Friend Requests</h3>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No pending requests
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-purple-100 bg-white/80 backdrop-blur-sm shadow-lg">
+              <CardHeader>
+                <h3 className="font-semibold text-purple-700 dark:text-purple-400">Recent Activity</h3>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No recent activity
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
-
-      {/* Sidebar - Right Column */}
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <h3 className="font-semibold">Friend Requests</h3>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No pending requests
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <h3 className="font-semibold">Recent Activity</h3>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No recent activity
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
