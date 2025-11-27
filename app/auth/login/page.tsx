@@ -3,10 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react"
+
+import ActivityService from '@/lib/services/activity-service'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -35,6 +37,7 @@ export default function LoginPage() {
           alert('Please verify your email address before signing in. Check your inbox for a verification link.')
           window.location.href = `/auth/verify-required?email=` + encodeURIComponent(email)
         } else {
+          // Trigger shadcn alert
           alert(error.message)
         }
       } else if (data.user) {
@@ -53,8 +56,8 @@ export default function LoginPage() {
           if (!existingProfile) {
             // Generate a username if none exists in metadata
             const username = data.user.user_metadata.user_name || 
-                           data.user.email?.split('@')[0] || 
-                           `user_${data.user.id.substring(0, 8)}`
+              data.user.email?.split('@')[0] || 
+              `user_${data.user.id.substring(0, 8)}`
 
             const { error: profileError } = await supabase
               .from('profiles')
@@ -71,6 +74,10 @@ export default function LoginPage() {
               return
             }
           }
+
+          // Log login activity
+          const activityService = new ActivityService(data.user.id)
+          await activityService.logActivity('login')
 
           // Redirect to timeline on success
           window.location.href = '/timeline'
