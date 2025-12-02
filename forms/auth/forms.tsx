@@ -6,9 +6,9 @@
  * 
  * @module forms/auth/forms
  */
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { z } from 'zod'
-import { signupFormSchema, loginFormSchema } from './schema'
+import { signupFormSchema, loginFormSchema, passwordResetFormSchema, newPasswordFormSchema } from './schema'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Input } from '@/components/ui/input'
@@ -21,6 +21,8 @@ import ActivityService from '@/lib/services/activity-service'
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+
+import Link from 'next/link'
 
 /**
  * Login Form Component
@@ -156,7 +158,10 @@ export const LoginForm = () => {
                         </FormItem>
                     )}
                 />
-                <Button type="submit" className="w-full">{isLoading ? "Loading..." : "Login"}</Button>
+                <Button type="submit" className="w-full mb-2 cursor-pointer">{isLoading ? "Loading..." : "Login"}</Button>
+                <Link href="/auth/signup" className="no-underline border border-gray-300 w-full text-center py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700 font-semibold block">
+                    Don't have an account? Sign up
+                </Link>
             </form>
         </Form>
     );
@@ -196,6 +201,13 @@ export const SignupForm = () => {
 
     return (
         <Form {...form}>
+            {error && (
+                <Alert variant="destructive" className="mb-4">
+                    <AlertCircleIcon className="h-4 w-4 mr-2" />
+                    <AlertTitle>Error Occurred:</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mb-6">
                 <FormField 
                     control={form.control}
@@ -296,5 +308,89 @@ export const SignupForm = () => {
  * @component 
  */
 export const PasswordResetForm = () => {
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [isEmailSent, setIsEmailSent] = useState(false)
 
+    const router = useRouter()
+
+    // Initialize React Hook Form with Zod schema
+    const form = useForm<z.infer<typeof passwordResetFormSchema>>({
+        resolver: zodResolver(passwordResetFormSchema),
+        defaultValues: {
+            email: '',
+        },
+    });
+
+    const onSubmit: SubmitHandler<z.infer<typeof passwordResetFormSchema>> = async (data) => {
+        if(data) {
+            setIsLoading(true);
+
+            try {
+                const supabase = createClient()
+
+                const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+                    redirectTo: `${window.location.origin}/auth/reset-password`
+                })
+
+                if (error) {
+                    // Handle specific error cases
+                    setError(error.message)
+                    setIsLoading(false)
+                } else {
+                    // Successfully sent reset email
+                    setIsEmailSent(true)
+                    setIsLoading(false)
+                    router.push('/auth/forgot-password?sent=true&email=' + encodeURIComponent(data.email))
+                }
+            } catch (error) {
+                console.error('Unexpected error:', error)
+                alert('An unexpected error occurred')
+            } finally {
+                setIsLoading(false)
+            }
+        }else{
+            // Handle form errors
+            setError('Please fill in all required fields correctly.')
+            setIsLoading(false)
+        }
+    }
+
+    if (isEmailSent) {
+        return (
+            <div className="w-full text-center">
+                <p className="text-green-600 font-semibold">
+                    If an account with that email exists, a password reset link has been sent.
+                </p>
+            </div>
+        )
+    }
+
+    return (
+        <Form {...form}>
+            {error && (
+                <Alert variant="destructive" className="mb-4">
+                    <AlertCircleIcon className="h-4 w-4 mr-2" />
+                    <AlertTitle>Error Occurred:</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                                <Input type="email" placeholder="Email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <Button type="submit" className="w-full">{isLoading ? "Loading..." : "Send Reset Instructions"}</Button>
+            </form>
+        </Form>
+    );
 }

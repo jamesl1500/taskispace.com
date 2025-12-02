@@ -10,13 +10,10 @@
 
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Sparkles } from "lucide-react"
-
 import { LoginForm } from "@/forms/auth/forms"
-
-import ActivityService from '@/lib/services/activity-service'
+import Link from "next/link"
 
 export default function LoginPage() {
 
@@ -42,13 +39,13 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 px-6">
           <div className="text-center text-sm text-gray-600">
-            Don't have an account?{" "}
-            <a 
-              href="/auth/signup" 
+            Forgot your password? {" "}
+            <Link
+              href="/auth/forgot-password" 
               className="text-purple-600 hover:text-purple-700 hover:underline font-semibold transition-colors"
             >
-              Sign up
-            </a>
+              Reset it here
+            </Link>
           </div>
         </CardFooter>
       </Card>

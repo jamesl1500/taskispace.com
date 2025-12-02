@@ -298,6 +298,98 @@ export default function WorkspaceDetailPage() {
     setIsCreateTaskDialogOpen(true)
   }
 
+  // Drag and Drop Handlers
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null)
+  const [dragOverListId, setDragOverListId] = useState<string | null>(null)
+
+  const handleDragStart = (e: React.DragEvent, task: Task) => {
+    setDraggedTask(task)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML)
+    // Add a semi-transparent effect
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5'
+    }
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1'
+    }
+    setDraggedTask(null)
+    setDragOverListId(null)
+  }
+
+  const handleDragOver = (e: React.DragEvent, listId: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverListId(listId)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're leaving the list container, not just moving between children
+    if (e.currentTarget === e.target) {
+      setDragOverListId(null)
+    }
+  }
+
+  const handleDrop = async (e: React.DragEvent, targetListId: string) => {
+    e.preventDefault()
+    setDragOverListId(null)
+
+    if (!draggedTask || draggedTask.list_id === targetListId) {
+      setDraggedTask(null)
+      return
+    }
+
+    const sourceListId = draggedTask.list_id
+
+    try {
+      // Optimistically update UI
+      setTasks(prev => {
+        const newTasks = { ...prev }
+        // Remove from source list
+        newTasks[sourceListId] = prev[sourceListId].filter(t => t.id !== draggedTask.id)
+        // Add to target list
+        newTasks[targetListId] = [...(prev[targetListId] || []), { ...draggedTask, list_id: targetListId }]
+        return newTasks
+      })
+
+      // Update on server
+      const response = await fetch(`/api/tasks/${draggedTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ list_id: targetListId })
+      })
+
+      if (!response.ok) {
+        // Revert on error
+        setTasks(prev => {
+          const newTasks = { ...prev }
+          newTasks[targetListId] = prev[targetListId].filter(t => t.id !== draggedTask.id)
+          newTasks[sourceListId] = [...prev[sourceListId], draggedTask]
+          return newTasks
+        })
+        throw new Error('Failed to move task')
+      }
+
+      const updatedTask = await response.json()
+      
+      // Update with server response
+      setTasks(prev => ({
+        ...prev,
+        [targetListId]: prev[targetListId].map(t => 
+          t.id === updatedTask.id ? updatedTask : t
+        )
+      }))
+    } catch (error) {
+      console.error('Error moving task:', error)
+      setError(error instanceof Error ? error.message : 'Failed to move task')
+    } finally {
+      setDraggedTask(null)
+    }
+  }
+
   const openViewTaskDialog = (task: Task) => {
     setViewingTask(task)
     setIsTaskSidePanelOpen(true)
@@ -383,7 +475,7 @@ export default function WorkspaceDetailPage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex flex-1 overflow-y-hidden">
+        <div className="flex flex-1 overflow-y-hidden overflow-x-hidden">
           <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>
             {/* Kanban Board */}
             {lists.length === 0 ? (
@@ -402,11 +494,11 @@ export default function WorkspaceDetailPage() {
               </div>
             ) : (
               <div className="flex-1 overflow-x-auto p-6">
-                <div className="flex gap-4 pb-4 h-full">
+                <div className="flex gap-4 pb-4 h-[calc(100vh-15vh)] overflow-x-auto w-[calc(100vw-5vw)]">
                 {lists.map((list) => (
                   <div
                     key={list.id}
-                    className="flex flex-col w-80 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0 shadow-md border border-gray-300 dark:border-gray-700 h-[calc(100vh-180px)]"
+                    className="flex flex-col w-80 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0 shadow-md border border-gray-300 dark:border-gray-700 h-[calc(100vh-18vh)]"
                   >
                       {/* List Header */}
                       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -441,17 +533,29 @@ export default function WorkspaceDetailPage() {
                       </div>
 
                       {/* Tasks List */}
-                      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                      <div 
+                        className={`flex-1 overflow-y-auto p-3 space-y-2 transition-colors ${
+                          dragOverListId === list.id ? 'bg-purple-50 dark:bg-purple-900/20 ring-2 ring-purple-300 dark:ring-purple-700' : ''
+                        }`}
+                        onDragOver={(e) => handleDragOver(e, list.id)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, list.id)}
+                      >
                         {tasks[list.id]?.length === 0 ? (
                           <div className="text-center py-8">
                             <CheckCircle className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500 dark:text-gray-400">No tasks yet</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {dragOverListId === list.id ? 'Drop task here' : 'No tasks yet'}
+                            </p>
                           </div>
                         ) : (
                           tasks[list.id]?.map((task) => (
                             <Card
                               key={task.id}
-                              className="p-3 cursor-pointer hover:shadow-md transition-shadow bg-white dark:bg-gray-900"
+                              className="p-3 cursor-move hover:shadow-md transition-all bg-white dark:bg-gray-900 active:opacity-50"
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, task)}
+                              onDragEnd={handleDragEnd}
                               onClick={() => openViewTaskDialog(task)}
                             >
                               <div className="space-y-2">
