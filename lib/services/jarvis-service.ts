@@ -19,7 +19,15 @@ export class JarvisService {
   // Configuration for token efficiency
   private readonly MAX_HISTORY_MESSAGES = 10 // Only send last 10 messages for context
   private readonly MODEL = 'gpt-4o-mini' // More cost-effective than gpt-3.5-turbo
-  private readonly SYSTEM_PROMPT = 'You are Jarvis, a concise AI assistant that helps users with their tasks and productivity. Keep responses brief and actionable.'
+  private readonly SYSTEM_PROMPT = `You are Jarvis, a concise AI assistant that helps users with their tasks and productivity. Keep responses brief and actionable.
+
+You can help users create tasks. When a user wants to create a task, extract:
+- title (required): The task title
+- description (optional): Task details
+- priority (optional): low, medium, or high (default: medium)
+- due_date (optional): Date in YYYY-MM-DD format
+
+If the user's request is unclear, ask for clarification. Always confirm task details before creating.`
 
   constructor() {
     this.openai = new OpenAI({
@@ -33,6 +41,116 @@ export class JarvisService {
    */
   private estimateTokens(text: string): number {
     return Math.ceil(text.length / 4)
+  }
+
+  /**
+   * Parse task creation intent from message using AI
+   */
+  private async parseTaskIntent(message: string): Promise<{
+    isTaskCreation: boolean
+    taskData?: {
+      title: string
+      description?: string
+      priority?: 'low' | 'medium' | 'high'
+      due_date?: string
+    }
+  }> {
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: this.MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a task intent parser. Analyze if the user wants to create a task.
+If yes, extract: title, description, priority (low/medium/high), due_date (YYYY-MM-DD).
+Respond ONLY with valid JSON: {"isTaskCreation": boolean, "taskData": {...}}`
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 200
+      })
+
+      const content = response.choices[0].message?.content?.trim()
+      if (!content) return { isTaskCreation: false }
+
+      const parsed = JSON.parse(content)
+      return parsed
+    } catch (error) {
+      console.error('Error parsing task intent:', error)
+      return { isTaskCreation: false }
+    }
+  }
+
+  /**
+   * Create a task through AI assistant
+   */
+  async createTaskFromAI(taskData: {
+    title: string
+    description?: string
+    priority?: 'low' | 'medium' | 'high'
+    due_date?: string
+    workspace_id: string
+    list_id: string
+  }): Promise<any> {
+    const supabase = await createClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      throw new Error('Not authenticated')
+    }
+
+    // Create task via API
+    const { data: task, error } = await supabase
+      .from('tasks')
+      .insert({
+        title: taskData.title,
+        description: taskData.description || null,
+        priority: taskData.priority || 'medium',
+        status: 'todo',
+        due_date: taskData.due_date || null,
+        list_id: taskData.list_id,
+        created_by: user.id,
+        assignee: user.id
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating task:', error)
+      throw new Error(`Failed to create task: ${error.message}`)
+    }
+
+    // Add as collaborator
+    await supabase
+      .from('task_collaborators')
+      .insert({
+        task_id: task.id,
+        user_id: user.id,
+        role: 'assignee',
+        added_by: user.id
+      })
+
+    // Log activity
+    await supabase
+      .from('task_activity')
+      .insert({
+        task_id: task.id,
+        actor: user.id,
+        type: 'task_created',
+        payload: {
+          title: task.title,
+          status: task.status,
+          priority: task.priority,
+          created_via: 'jarvis_ai'
+        }
+      })
+
+    return task
   }
 
   /**
@@ -124,6 +242,8 @@ export class JarvisService {
       throw new Error(`Failed to fetch messages: ${msgError.message}`)
     }
 
+    console.log(`[JarvisService] getConversation: Fetched ${messages?.length || 0} messages for conversation ${conversationId}`)
+
     const totalTokens = messages?.reduce((sum, msg) => sum + (msg.tokens_used || 0), 0) || 0
 
     return {
@@ -200,7 +320,12 @@ export class JarvisService {
     message: string,
     conversationId?: string,
     maxHistoryMessages: number = this.MAX_HISTORY_MESSAGES
-  ): Promise<{ reply: string; conversation: JarvisConversationWithMessages }> {
+  ): Promise<{ 
+    reply: string; 
+    conversation: JarvisConversationWithMessages;
+    taskCreated?: any;
+    needsWorkspaceSelection?: boolean;
+  }> {
     const supabase = await createClient()
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -252,7 +377,7 @@ export class JarvisService {
 
     // Save user message to database
     const userTokens = this.estimateTokens(message)
-    await supabase
+    const { error: userMsgError } = await supabase
       .from('jarvis_messages')
       .insert({
         conversation_id: currentConversationId,
@@ -260,6 +385,71 @@ export class JarvisService {
         content: message,
         tokens_used: userTokens
       })
+
+    if (userMsgError) {
+      console.error('Error saving user message:', userMsgError)
+      throw new Error(`Failed to save user message: ${userMsgError.message}`)
+    }
+
+    // Check if this is a task creation request
+    const taskIntent = await this.parseTaskIntent(message)
+    let taskCreated = null
+    let needsWorkspaceSelection = false
+
+    // If task creation detected, try to create the task
+    if (taskIntent.isTaskCreation && taskIntent.taskData) {
+      // Get user's workspaces to check if we need to ask for selection
+      const { data: workspaces } = await supabase
+        .from('workspaces')
+        .select('id, name')
+        .eq('owner_id', user.id)
+        .limit(1)
+
+      if (!workspaces || workspaces.length === 0) {
+        needsWorkspaceSelection = true
+      } else {
+        // Get the first list in the first workspace as default
+        const { data: lists } = await supabase
+          .from('lists')
+          .select('id, name')
+          .eq('workspace_id', workspaces[0].id)
+          .limit(1)
+
+        if (lists && lists.length > 0) {
+          // Try to create the task
+          try {
+            const createdTask = await this.createTaskFromAI({
+              ...taskIntent.taskData,
+              workspace_id: workspaces[0].id,
+              list_id: lists[0].id
+            })
+            taskCreated = {
+              id: createdTask.id,
+              title: createdTask.title,
+              workspace_name: workspaces[0].name,
+              list_name: lists[0].name
+            }
+          } catch (error) {
+            console.error('Failed to create task:', error)
+          }
+        } else {
+          needsWorkspaceSelection = true
+        }
+      }
+    }
+
+    // If task was created, add context to the conversation
+    if (taskCreated) {
+      messageHistory.push({
+        role: 'system',
+        content: `SYSTEM: Task "${taskCreated.title}" was successfully created in workspace "${taskCreated.workspace_name}" under list "${taskCreated.list_name}". Confirm this to the user in a friendly way.`
+      })
+    } else if (needsWorkspaceSelection) {
+      messageHistory.push({
+        role: 'system',
+        content: 'SYSTEM: User needs to create a workspace and list first before creating tasks. Inform them politely.'
+      })
+    }
 
     // Call OpenAI with optimized context
     const completion = await this.openai.chat.completions.create({
@@ -273,7 +463,7 @@ export class JarvisService {
     const aiTokens = completion.usage?.total_tokens || this.estimateTokens(aiReply)
 
     // Save assistant response to database
-    await supabase
+    const { error: aiMsgError } = await supabase
       .from('jarvis_messages')
       .insert({
         conversation_id: currentConversationId,
@@ -281,6 +471,11 @@ export class JarvisService {
         content: aiReply,
         tokens_used: aiTokens
       })
+
+    if (aiMsgError) {
+      console.error('Error saving assistant message:', aiMsgError)
+      throw new Error(`Failed to save assistant message: ${aiMsgError.message}`)
+    }
 
     // Update conversation timestamp
     await supabase
@@ -293,7 +488,9 @@ export class JarvisService {
 
     return {
       reply: aiReply,
-      conversation: updatedConversation
+      conversation: updatedConversation,
+      taskCreated,
+      needsWorkspaceSelection
     }
   }
 

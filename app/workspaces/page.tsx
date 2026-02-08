@@ -110,7 +110,7 @@ export default function WorkspacesPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Access Denied</CardTitle>
@@ -359,7 +359,7 @@ export default function WorkspacesPage() {
                     <div className="flex items-center space-x-3">
                       <div 
                         className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: workspace.color }}
+                        style={{ backgroundColor: workspace.color ?? '#3b82f6' }}
                       />
                       <CardTitle className="text-lg">{workspace.name}</CardTitle>
                     </div>

@@ -65,10 +65,24 @@ export default function SettingsPage() {
 
   // Notification settings
   const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    taskReminders: true,
-    collaborationUpdates: true,
-    weeklyDigest: false
+    email_notifications: true,
+    email_task_reminders: true,
+    email_task_assigned: true,
+    email_task_completed: true,
+    email_mentions: true,
+    email_comments: true,
+    email_collaboration_updates: true,
+    email_workspace_invites: true,
+    email_friend_requests: true,
+    email_daily_digest: false,
+    email_weekly_digest: false,
+    push_notifications: true,
+    push_task_reminders: true,
+    push_task_assigned: true,
+    push_mentions: true,
+    push_comments: true,
+    email_product_updates: true,
+    email_marketing: false
   })
 
   // Subscription state
@@ -116,6 +130,52 @@ export default function SettingsPage() {
       fetchSubscription()
     }
   }, [user])
+
+  // Fetch notification preferences
+  useEffect(() => {
+    const fetchNotificationPreferences = async () => {
+      try {
+        if (!user) return
+        
+        const { data, error } = await supabase
+          .from('notification_preferences')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (error) {
+          console.error('Error fetching notification preferences:', error)
+          return
+        }
+        
+        if (data) {
+          setNotifications({
+            email_notifications: data.email_notifications,
+            email_task_reminders: data.email_task_reminders,
+            email_task_assigned: data.email_task_assigned,
+            email_task_completed: data.email_task_completed,
+            email_mentions: data.email_mentions,
+            email_comments: data.email_comments,
+            email_collaboration_updates: data.email_collaboration_updates,
+            email_workspace_invites: data.email_workspace_invites,
+            email_friend_requests: data.email_friend_requests,
+            email_daily_digest: data.email_daily_digest,
+            email_weekly_digest: data.email_weekly_digest,
+            push_notifications: data.push_notifications,
+            push_task_reminders: data.push_task_reminders,
+            push_task_assigned: data.push_task_assigned,
+            push_mentions: data.push_mentions,
+            push_comments: data.push_comments,
+            email_product_updates: data.email_product_updates,
+            email_marketing: data.email_marketing
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching notification preferences:', error)
+      }
+    }
+    fetchNotificationPreferences()
+  }, [user, supabase])
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -325,16 +385,35 @@ export default function SettingsPage() {
     setErrorMessage('')
 
     try {
-      const response = await fetch('/api/settings/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(notifications)
-      })
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
 
-      const data = await response.json()
+      // Check if preferences exist, if not create them
+      const { data: existing } = await supabase
+        .from('notification_preferences')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update notifications')
+      if (existing) {
+        // Update existing preferences
+        const { error } = await supabase
+          .from('notification_preferences')
+          .update(notifications)
+          .eq('user_id', user.id)
+
+        if (error) throw error
+      } else {
+        // Create new preferences
+        const { error } = await supabase
+          .from('notification_preferences')
+          .insert({
+            user_id: user.id,
+            ...notifications
+          })
+
+        if (error) throw error
       }
 
       setSaveStatus('success')
@@ -377,7 +456,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
     </div>
   )
@@ -682,7 +761,7 @@ function UsageItem({
   }
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-gray-900 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 py-10">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Settings</h1>
@@ -1025,68 +1104,325 @@ function UsageItem({
                 <CardTitle>Notification Preferences</CardTitle>
                 <CardDescription>Manage how you receive notifications</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
+              <CardContent className="space-y-8">
+                {/* Master Email Toggle */}
+                <div className="pb-4 border-b">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="email-notifications">Email Notifications</Label>
+                      <Label htmlFor="email-notifications" className="text-base font-semibold">Email Notifications</Label>
                       <p className="text-sm text-muted-foreground">
-                        Receive notifications via email
+                        Master toggle for all email notifications
                       </p>
                     </div>
                     <Switch
                       id="email-notifications"
-                      checked={notifications.emailNotifications}
+                      checked={notifications.email_notifications}
                       onCheckedChange={(checked) => 
-                        setNotifications({ ...notifications, emailNotifications: checked })
+                        setNotifications({ ...notifications, email_notifications: checked })
                       }
                     />
                   </div>
+                </div>
 
+                {/* Email Notifications Section */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Email Notifications</h3>
+                  
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="task-reminders">Task Reminders</Label>
+                      <Label htmlFor="email-task-reminders">Task Reminders</Label>
                       <p className="text-sm text-muted-foreground">
                         Get reminders for upcoming task deadlines
                       </p>
                     </div>
                     <Switch
-                      id="task-reminders"
-                      checked={notifications.taskReminders}
+                      id="email-task-reminders"
+                      checked={notifications.email_task_reminders}
                       onCheckedChange={(checked) => 
-                        setNotifications({ ...notifications, taskReminders: checked })
+                        setNotifications({ ...notifications, email_task_reminders: checked })
                       }
+                      disabled={!notifications.email_notifications}
                     />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="collaboration-updates">Collaboration Updates</Label>
+                      <Label htmlFor="email-task-assigned">Task Assignments</Label>
                       <p className="text-sm text-muted-foreground">
-                        Notifications when someone mentions you or comments
+                        When someone assigns you a task
                       </p>
                     </div>
                     <Switch
-                      id="collaboration-updates"
-                      checked={notifications.collaborationUpdates}
+                      id="email-task-assigned"
+                      checked={notifications.email_task_assigned}
                       onCheckedChange={(checked) => 
-                        setNotifications({ ...notifications, collaborationUpdates: checked })
+                        setNotifications({ ...notifications, email_task_assigned: checked })
                       }
+                      disabled={!notifications.email_notifications}
                     />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="weekly-digest">Weekly Digest</Label>
+                      <Label htmlFor="email-task-completed">Task Completions</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When tasks you created or follow are completed
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-task-completed"
+                      checked={notifications.email_task_completed}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_task_completed: checked })
+                      }
+                      disabled={!notifications.email_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-mentions">Mentions</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When someone mentions you in a comment or task
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-mentions"
+                      checked={notifications.email_mentions}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_mentions: checked })
+                      }
+                      disabled={!notifications.email_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-comments">Comments</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When someone comments on your tasks or posts
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-comments"
+                      checked={notifications.email_comments}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_comments: checked })
+                      }
+                      disabled={!notifications.email_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-collaboration-updates">Collaboration Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Updates on shared workspaces and collaborative tasks
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-collaboration-updates"
+                      checked={notifications.email_collaboration_updates}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_collaboration_updates: checked })
+                      }
+                      disabled={!notifications.email_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-workspace-invites">Workspace Invites</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When someone invites you to a workspace
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-workspace-invites"
+                      checked={notifications.email_workspace_invites}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_workspace_invites: checked })
+                      }
+                      disabled={!notifications.email_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-friend-requests">Friend Requests</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When someone sends you a friend request
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-friend-requests"
+                      checked={notifications.email_friend_requests}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_friend_requests: checked })
+                      }
+                      disabled={!notifications.email_notifications}
+                    />
+                  </div>
+                </div>
+
+                {/* Digest Settings */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Email Digests</h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-daily-digest">Daily Digest</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive a daily summary of your activity
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-daily-digest"
+                      checked={notifications.email_daily_digest}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_daily_digest: checked })
+                      }
+                      disabled={!notifications.email_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-weekly-digest">Weekly Digest</Label>
                       <p className="text-sm text-muted-foreground">
                         Receive a weekly summary of your activity
                       </p>
                     </div>
                     <Switch
-                      id="weekly-digest"
-                      checked={notifications.weeklyDigest}
+                      id="email-weekly-digest"
+                      checked={notifications.email_weekly_digest}
                       onCheckedChange={(checked) => 
-                        setNotifications({ ...notifications, weeklyDigest: checked })
+                        setNotifications({ ...notifications, email_weekly_digest: checked })
+                      }
+                      disabled={!notifications.email_notifications}
+                    />
+                  </div>
+                </div>
+
+                {/* Push Notifications Section */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between pb-2">
+                    <div className="space-y-0.5">
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Push Notifications</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Receive in-app notifications
+                      </p>
+                    </div>
+                    <Switch
+                      id="push-notifications"
+                      checked={notifications.push_notifications}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, push_notifications: checked })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="push-task-reminders">Task Reminders</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Push notifications for task deadlines
+                      </p>
+                    </div>
+                    <Switch
+                      id="push-task-reminders"
+                      checked={notifications.push_task_reminders}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, push_task_reminders: checked })
+                      }
+                      disabled={!notifications.push_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="push-task-assigned">Task Assignments</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When someone assigns you a task
+                      </p>
+                    </div>
+                    <Switch
+                      id="push-task-assigned"
+                      checked={notifications.push_task_assigned}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, push_task_assigned: checked })
+                      }
+                      disabled={!notifications.push_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="push-mentions">Mentions</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When someone mentions you
+                      </p>
+                    </div>
+                    <Switch
+                      id="push-mentions"
+                      checked={notifications.push_mentions}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, push_mentions: checked })
+                      }
+                      disabled={!notifications.push_notifications}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="push-comments">Comments</Label>
+                      <p className="text-sm text-muted-foreground">
+                        When someone comments on your content
+                      </p>
+                    </div>
+                    <Switch
+                      id="push-comments"
+                      checked={notifications.push_comments}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, push_comments: checked })
+                      }
+                      disabled={!notifications.push_notifications}
+                    />
+                  </div>
+                </div>
+
+                {/* Marketing & Updates Section */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Marketing & Updates</h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-product-updates">Product Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Updates about new features and improvements
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-product-updates"
+                      checked={notifications.email_product_updates}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_product_updates: checked })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-marketing">Marketing Emails</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Promotional emails and special offers
+                      </p>
+                    </div>
+                    <Switch
+                      id="email-marketing"
+                      checked={notifications.email_marketing}
+                      onCheckedChange={(checked) => 
+                        setNotifications({ ...notifications, email_marketing: checked })
                       }
                     />
                   </div>

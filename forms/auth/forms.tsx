@@ -6,7 +6,7 @@
  * 
  * @module forms/auth/forms
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { z } from 'zod'
 import { signupFormSchema, loginFormSchema, passwordResetFormSchema, newPasswordFormSchema } from './schema'
 import { useForm, SubmitHandler } from 'react-hook-form'
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { AlertCircleIcon } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 
 import ActivityService from '@/lib/services/activity-service'
 
@@ -77,7 +78,7 @@ export const LoginForm = () => {
                         const { data: existingProfile } = await supabase
                             .from('profiles')
                             .select('id')
-                            .eq('user_id', loginData.user.id)
+                            .eq('id', loginData.user.id)
                             .single()
 
                         if (!existingProfile) {
@@ -160,7 +161,7 @@ export const LoginForm = () => {
                 />
                 <Button type="submit" className="w-full mb-2 cursor-pointer">{isLoading ? "Loading..." : "Login"}</Button>
                 <Link href="/auth/signup" className="no-underline border border-gray-300 w-full text-center py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700 font-semibold block">
-                    Don't have an account? Sign up
+                    Don&apos;t have an account? Sign up
                 </Link>
             </form>
         </Form>
@@ -181,13 +182,13 @@ export const SignupForm = () => {
     const [error, setError] = useState<string | null>(null)
 
     const router = useRouter()
+    const searchParams = useSearchParams()
 
     // Initialize React Hook Form with Zod schema
     const form = useForm<z.infer<typeof signupFormSchema>>({
         resolver: zodResolver(signupFormSchema),
         defaultValues: {
             full_name: '',
-            user_name: '',
             email: '',
             password: '',
             confirm_password: '',
@@ -195,8 +196,92 @@ export const SignupForm = () => {
         },
     });
 
+    // Check for invitation token and pre-fill email if present
+    useEffect(() => {
+        const emailParam = searchParams.get('email')
+        
+        if (emailParam) {
+            form.setValue('email', emailParam)
+        }
+    }, [searchParams, form])
+
     const onSubmit: SubmitHandler<z.infer<typeof signupFormSchema>> = async (data) => {
         // Implementation for signup submission
+        if(data) {
+            setIsLoading(true);
+
+            try {
+                const supabase = createClient()
+
+                const { data: signupData, error } = await supabase.auth.signUp({
+                    email: data.email,
+                    password: data.password,
+                    options: {
+                        data: {
+                            full_name: data.full_name,
+                        },
+                        emailRedirectTo: `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(data.email)}`,
+                    },
+                })
+
+                if (error) {
+                    // Handle specific error cases
+                    setError(error.message)
+                } else if (signupData.user) {
+                    // Create user profile
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert({
+                            id: signupData.user.id,
+                            display_name: data.full_name,
+                        })
+
+                    if (profileError) {
+                        console.error('Profile creation error:', profileError.message)
+                        setError('Error creating user profile')
+                        return
+                    }
+
+                    // Check if there's an invitation token to accept
+                    const invitationToken = sessionStorage.getItem('invitation_token')
+                    if (invitationToken) {
+                        try {
+                            const acceptResponse = await fetch('/api/invitations/accept', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ token: invitationToken }),
+                            })
+
+                            if (acceptResponse.ok) {
+                                const { workspace } = await acceptResponse.json()
+                                // Clear the invitation token
+                                sessionStorage.removeItem('invitation_token')
+                                // Redirect to the workspace
+                                router.push(`/workspaces/${workspace.id}`)
+                                return
+                            } else {
+                                console.error('Failed to accept invitation:', await acceptResponse.text())
+                                // Continue with normal flow if invitation acceptance fails
+                            }
+                        } catch (inviteError) {
+                            console.error('Error accepting invitation:', inviteError)
+                            // Continue with normal flow if there's an error
+                        }
+                    }
+
+                    // Redirect to email verification page
+                    router.push('/auth/verify-required?email=' + encodeURIComponent(data.email))
+                }
+            } catch (error) {
+                console.error('Unexpected error:', error)
+                alert('An unexpected error occurred')
+            } finally {
+                setIsLoading(false)
+            }
+        } else {
+            // Handle form errors
+            setError('Please fill in all required fields correctly.')
+        }
     }
 
     return (
@@ -208,7 +293,7 @@ export const SignupForm = () => {
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mb-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField 
                     control={form.control}
                     name="full_name"
@@ -217,19 +302,6 @@ export const SignupForm = () => {
                             <FormLabel>Full Name</FormLabel>
                             <FormControl>
                                 <Input placeholder="Full Name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField 
-                    control={form.control}
-                    name="user_name"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Username" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

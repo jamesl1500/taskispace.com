@@ -111,7 +111,7 @@ export default function TasksPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
@@ -266,9 +266,9 @@ export default function TasksPage() {
         </Card>
 
         {/* Tasks List */}
-        <div className="space-y-4">
+        <div className="space-y-4 flex flex-row flex-wrap gap-4">
           {filteredAndSortedTasks.length === 0 ? (
-            <Card className="border-purple-100 bg-white/80 backdrop-blur-sm">
+            <Card className="border-purple-100 bg-white/80 backdrop-blur-sm shadow-lg w-full">
               <CardContent className="py-12 text-center">
                 <CheckCircle className="h-12 w-12 text-purple-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -286,7 +286,7 @@ export default function TasksPage() {
             </Card>
           ) : (
             filteredAndSortedTasks.map((task) => (
-              <Card key={task.id} className="hover:shadow-xl transition-all border-purple-100 bg-white/80 backdrop-blur-sm">
+              <Card key={task.id} className="hover:shadow-xl transition-all border-purple-100 bg-white/80 backdrop-blur-sm shadow-lg flex-1">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
@@ -347,40 +347,6 @@ export default function TasksPage() {
             ))
           )}
         </div>
-
-        {/* Stats */}
-        {filteredAndSortedTasks.length > 0 && (
-          <Card className="mt-8">
-            <CardContent className="py-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {filteredAndSortedTasks.length}
-                  </div>
-                  <div className="text-slate-600 dark:text-slate-400 text-sm">
-                    Total Tasks
-                  </div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {filteredAndSortedTasks.filter(t => t.status === TaskStatus.COMPLETED).length}
-                  </div>
-                  <div className="text-slate-600 dark:text-slate-400 text-sm">
-                    Completed
-                  </div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {filteredAndSortedTasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length}
-                  </div>
-                  <div className="text-slate-600 dark:text-slate-400 text-sm">
-                    In Progress
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   )

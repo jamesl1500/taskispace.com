@@ -82,23 +82,22 @@ export async function middleware(request: NextRequest) {
   if (user && user.email_confirmed_at) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('user_name, display_name')
+      .select('onboarding_completed, onboarding_stage')
       .eq('id', user.id)
       .single()
 
-    // Check if user needs onboarding (auto-generated username or missing profile)
-    const needsOnboarding = !profile?.user_name || profile.user_name.startsWith('user_')
     const isOnOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding')
     const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
 
-    // Redirect to onboarding if needed
-    if (needsOnboarding && !isOnOnboardingPage && !isAuthPage) {
-      return NextResponse.redirect(new URL('/onboarding', request.url))
+    // Redirect to onboarding if not completed
+    if (!profile?.onboarding_completed && !isOnOnboardingPage && !isAuthPage) {
+      const stage = profile?.onboarding_stage || 1
+      return NextResponse.redirect(new URL(`/onboarding/stage_${stage}`, request.url))
     }
 
     // Redirect away from onboarding if already completed
-    if (!needsOnboarding && isOnOnboardingPage) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (profile?.onboarding_completed && isOnOnboardingPage) {
+      return NextResponse.redirect(new URL('/timeline', request.url))
     }
   }
 

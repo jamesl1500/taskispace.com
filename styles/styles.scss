@@ -1,0 +1,20 @@
+/**
+* Global styles
+* This file imports and defines global styles for the application.
+
+* It includes variables, mixins, resets, typography, and component styles.
+*/
+// Globals
+@use "shared/globals";
+@use "shared/liquid";
+
+// Templates
+@use "templates/header";
+@use "templates/sidebar";
+
+// Toolbox
+@use "shared/toolbox";
+
+// Pages
+@use "pages/auth";
+@use "pages/onboarding";

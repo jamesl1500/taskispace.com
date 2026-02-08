@@ -48,7 +48,7 @@ export default function ConversationPage() {
   const memberCount = members?.length || 0;
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <main className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto w-full">
         {/* Header */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 border-b shadow-sm">

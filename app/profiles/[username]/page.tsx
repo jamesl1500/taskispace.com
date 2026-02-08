@@ -112,7 +112,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           <Card>
             <CardHeader>
@@ -222,7 +222,7 @@ export default function ProfilePage() {
                   </div>
                 )}
                 {isOwnProfile && (
-                  <Link href="/settings/profile">
+                  <Link href="/settings">
                     <Button variant="outline">
                       Edit Profile
                     </Button>

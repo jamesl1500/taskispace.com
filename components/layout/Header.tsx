@@ -25,6 +25,9 @@ export default function Header() {
   const [createNewOpen, setCreateNewOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // Check if user is still onboarding
+  const isOnboarding = profile && !profile.onboarding_completed
+
   const handleSignOut = () => {
     signOut()
   }
@@ -54,8 +57,28 @@ export default function Header() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
+  // Show minimal header during onboarding
+  if (isOnboarding) {
+    return (
+      <header className="header-main">
+        <div className="px-3 sm:px-4 lg:px-6">
+          <div className="flex justify-between items-center h-14">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-sm">T</span>
+              </div>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-purple-700 via-pink-700 to-orange-700 bg-clip-text text-transparent hidden sm:block">
+                TaskiSpace
+              </h1>
+            </Link>
+          </div>
+        </div>
+      </header>
+    )
+  }
+
   return (
-    <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm border-b border-purple-100 dark:border-slate-700 sticky top-0 z-40">
+    <header className="header-main">
       <div className="px-3 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-14">
           {/* Left side - Sidebar trigger and Logo */}

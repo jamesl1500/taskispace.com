@@ -7,23 +7,15 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Vibrant gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50" />
-      
-      {/* Ambient light effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-300/20 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-orange-300/20 rounded-full blur-3xl" />
-      
+    <div className="min-h-screen relative overflow-hidden auth-page">
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-screen flex flex-col auth-page-content">
         
         {/* Main content - Side by side layout */}
-        <div className="flex-1 flex flex-col lg:flex-row">
+        <div className="flex-1 flex flex-col lg:flex-row auth-page-content-inner">
           {/* Left side - Image and text */}
-          <div className="lg:w-1/2 hidden lg:flex flex-col items-end justify-center p-8 lg:p-12 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 text-white">
-            <div className="max-w-lg text-center">
+          <div className="lg:w-1/2 hidden lg:flex bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 text-white auth-page-left">
+            <div className="w-full h-full text-center auth-page-left-cover">
               <h2 className="text-4xl font-bold mb-4">
                 Welcome to TaskiSpace
               </h2>
@@ -37,8 +29,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           </div>
           
           {/* Right side - Form */}
-          <div className="lg:w-1/2 flex items-center justify-center p-8 lg:p-12 bg-white/60 backdrop-blur-sm">
-            <div className="w-full max-w-md">
+          <div className="lg:w-1/2 flex items-center justify-center p-8 lg:p-12 bg-white/60 backdrop-blur-sm auth-page-right">
+            <div className="w-full max-w-md auth-page-form">
               {children}
             </div>
           </div>

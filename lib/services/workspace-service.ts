@@ -38,7 +38,43 @@ export class WorkspaceService {
             throw new Error(`Failed to fetch workspaces: ${error.message}`)
         }
 
-        return data
+        if (!data) {
+            return []
+        }
+
+        for (const workspace of data) {
+            // Get lists attached to the workspace
+            const { data: lists, error: listsError } = await supabase
+                .from('lists')
+                .select('*')
+                .eq('workspace_id', workspace.id)
+                .order('created_at', { ascending: true })
+
+            if (listsError) {
+                throw new Error(`Failed to fetch lists for workspace ${workspace.id}: ${listsError.message}`)
+            }
+
+            // Attach lists to the workspace
+            (workspace as any).lists = lists || []
+
+            // Now get tasks belonging to workspace
+            const { data: tasks, error: tasksError } = await supabase
+                .from('tasks')
+                .select('*')
+                .eq('workspace_id', workspace.id)
+                .order('created_at', { ascending: true })
+
+            if (tasksError) {
+                throw new Error(`Failed to fetch tasks for workspace ${workspace.id}: ${tasksError.message}`)
+            }
+
+            // Attach tasks to the workspace
+            (workspace as any).tasks = tasks || []
+        }
+
+        // Return workspaces with their lists and tasks
+        console.log('Fetched workspaces with lists and tasks:', data)
+        return data as Workspace[];
     }
 
     /**

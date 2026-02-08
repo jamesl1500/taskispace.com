@@ -1,0 +1,36 @@
+/**
+* Sidebar styles
+* Defines the appearance and layout of the sidebar component.
+*/
+.sidebar-primary{
+
+    .sidebar-content-primary {
+        background-color: #eee;
+        border-right: 1px solid #ccc;
+
+        .sidebar-menu-primary{
+
+            li{
+                
+                a{
+                    color: #333;
+                    border: 1px solid transparent;
+                    transition: all 0.2s ease-in-out;
+                    border-radius: 5px;
+
+                    &:hover{
+                        background-color: #fff;
+                        color: #000;
+                        border: 1px solid rgba(0,0,0,.1);
+                    }
+
+                    &[data-active="true"]{
+                        background-color: #fff;
+                        color: #000;
+                        border: 1px solid rgba(0,0,0,.1);
+                    }
+                }
+            }
+        }
+    }
+}

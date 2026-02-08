@@ -25,12 +25,15 @@ import {
   User,
   List as ListIcon,
   Users,
+  Mail,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Workspace } from '@/types/workspaces'
 import { List, ListMember, CreateListData } from '@/types/lists'
 import { Task, TaskStatus, TaskPriority, CreateTaskData, UpdateTaskData } from '@/types/tasks'
 import TaskSidePanel from '@/components/tasks/TaskSidePanel'
+import { WorkspaceInvitations } from '@/components/workspaces/WorkspaceInvitations'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function WorkspaceDetailPage() {
   const params = useParams()
@@ -417,7 +420,7 @@ export default function WorkspaceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <div className="container mx-auto p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -431,7 +434,7 @@ export default function WorkspaceDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <div className="container mx-auto p-6">
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
@@ -452,7 +455,7 @@ export default function WorkspaceDetailPage() {
       <div className="h-screen flex flex-col">
         {/* Header */}
         <div className="border-b bg-white dark:bg-gray-800 px-6 py-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
               <Link href="/workspaces">
                 <Button variant="ghost" size="sm">
@@ -472,12 +475,25 @@ export default function WorkspaceDetailPage() {
               New List
             </Button>
           </div>
-        </div>
+          
+          {/* Tabs */}
+          <Tabs defaultValue="board" className="w-full">
+            <TabsList>
+              <TabsTrigger value="board" className="flex items-center gap-2">
+                <ListIcon className="w-4 h-4" />
+                Board
+              </TabsTrigger>
+              <TabsTrigger value="invitations" className="flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Invitations
+              </TabsTrigger>
+            </TabsList>
 
-        {/* Main Content Area */}
-        <div className="flex flex-1 overflow-y-hidden overflow-x-hidden">
-          <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>
-            {/* Kanban Board */}
+            {/* Board Tab */}
+            <TabsContent value="board" className="mt-0">
+              <div className="flex flex-1 overflow-y-hidden overflow-x-hidden">
+                <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>
+                  {/* Kanban Board */}
             {lists.length === 0 ? (
               <div className="flex-1 flex items-center justify-center p-6">
                 <Card className="w-full max-w-md">
@@ -663,6 +679,16 @@ export default function WorkspaceDetailPage() {
               workspaceId={params.id as string}
             />
           )}
+        </div>
+            </TabsContent>
+
+            {/* Invitations Tab */}
+            <TabsContent value="invitations" className="mt-6">
+              <div className="max-w-4xl mx-auto px-6 py-6">
+                <WorkspaceInvitations workspaceId={params.id as string} />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Create List Dialog */}

@@ -81,8 +81,8 @@ export function AppSidebar() {
   if (!user) return null
 
   return (
-    <Sidebar>
-      <SidebarContent>
+    <Sidebar className='sidebar-primary'>
+      <SidebarContent className="sidebar-content-primary pt-[70px] ">
         {/* Logo */}
         <SidebarGroup>
           <div className="px-4 py-4">
@@ -98,10 +98,10 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Main Navigation */}
-        <SidebarGroup>
+        <SidebarGroup className="sidebar-group-primary">
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
+          <SidebarGroupContent className="sidebar-group-content-primary">
+            <SidebarMenu className="sidebar-menu-primary">
               {navigationItems.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                 return (

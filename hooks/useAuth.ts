@@ -41,7 +41,6 @@ export function useAuth() {
     )
 
     return () => {
-      console.log('[useAuth] Cleanup')
       isMounted = false
       subscription.unsubscribe()
     }

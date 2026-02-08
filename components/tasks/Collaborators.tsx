@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Plus, MoreVertical, Edit, Trash2, Users, UserCheck, Eye } from 'lucide-react'
@@ -184,9 +184,6 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
                     <UserAvatar userId={collaborator.user_id} size={40} />
-                    <AvatarFallback>
-                      {collaborator.user_id.charAt(0).toUpperCase()}
-                    </AvatarFallback>
                   </Avatar>
                   
                   <div className="flex-1 min-w-0">
@@ -194,7 +191,7 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
                       <UserName userId={collaborator.user_id} />
                     </h5>
                     <p className="text-sm text-gray-500">
-                      Added {new Date(collaborator.added_at).toLocaleDateString()}
+                      Added {new Date(collaborator.created_at).toLocaleDateString()}
                     </p>
                   </div>
 
@@ -314,9 +311,6 @@ export default function Collaborators({ taskId, canManage }: CollaboratorsProps)
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <Avatar className="h-8 w-8">
                   <UserAvatar userId={editingCollaborator.user_id} size={32} />
-                  <AvatarFallback>
-                    {editingCollaborator.user_id.charAt(0).toUpperCase()}
-                  </AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-medium"><UserName userId={editingCollaborator.user_id} /></p>

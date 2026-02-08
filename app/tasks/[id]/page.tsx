@@ -18,9 +18,14 @@ import {
   Edit
 } from 'lucide-react'
 import Link from 'next/link'
-import { Task, TaskStatus, TaskPriority } from '@/types/tasks'
+import { Task, TaskStatus, TaskPriority, TaskActivity } from '@/types/tasks'
+import UserName from '@/components/user/UserName'
+import React from 'react'
 
 interface TaskWithDetails extends Task {
+  activities?: import('@/types/tasks').TaskActivity[]
+  comments?: import('@/types/tasks').TaskComment[]
+  todos?: import('@/types/todos').Todo[]
   workspace?: {
     id: string
     name: string
@@ -194,6 +199,53 @@ export default function TaskDetailPage() {
     }
   }
 
+  const formatActivityMessage = (activity: TaskActivity) => {
+    const { type, payload } = activity
+    const payloadData = payload as Record<string, unknown>
+    
+    switch (type) {
+      case 'task_status_changed':
+        return `changed status from "${payloadData?.from || 'unknown'}" to "${payloadData?.to || 'unknown'}"`
+      case 'comment_added':
+        return 'added a comment'
+      case 'comment_edited':
+        return 'updated a comment'
+      case 'comment_deleted':
+        return 'deleted a comment'
+      case 'tag_added':
+        return `added tag "${payloadData?.tag_name || 'unknown'}"`
+      case 'tag_removed':
+        return `removed tag "${payloadData?.tag_name || 'unknown'}"`
+      case 'collaborator_added':
+        return `added ${payloadData?.user_name || 'someone'} as ${payloadData?.role || 'collaborator'}`
+      case 'collaborator_role_updated':
+        return `changed ${payloadData?.user_name || 'someone'}'s role to ${payloadData?.new_role || 'unknown'}`
+      case 'collaborator_removed':
+        return `removed ${payloadData?.user_name || 'someone'} as collaborator`
+      case 'task_updated':
+      case 'task_edited':
+        return `updated task ${payloadData?.field || 'details'}`
+      case 'subtask_added':
+        return `added subtask "${payloadData?.title || 'untitled'}"`
+      case 'subtask_completed':
+        return `completed subtask "${payloadData?.title || 'untitled'}"`
+      case 'subtask_updated':
+        return `updated subtask "${payloadData?.title || 'untitled'}"`
+      case 'subtask_deleted':
+        return `deleted subtask "${payloadData?.title || 'untitled'}"`
+      case 'task_created':
+        return 'created the task'
+      case 'task_completed':
+        return 'completed the task'
+      case 'due_date_changed':
+        return 'changed the due date'
+      case 'priority_changed':
+        return `changed priority to ${payloadData?.priority || 'unknown'}`
+      default:
+        return 'performed an action'
+    }
+  }
+
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
       case TaskPriority.HIGH:
@@ -207,7 +259,7 @@ export default function TaskDetailPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex items-center gap-4">
             <Skeleton className="h-8 w-8" />
@@ -272,7 +324,7 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="flex">
         {/* Main Content */}
         <div className={`flex-1`}>
@@ -494,6 +546,40 @@ export default function TaskDetailPage() {
                             View Workspace
                           </Button>
                         </Link>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Task Activity */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Activity</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {task.activities && task.activities.length > 0 ? (
+                        <ul className="space-y-4 max-h-60 overflow-y-auto">
+                          {task.activities.map(activity => (
+                            <li key={activity.id} className="text-sm text-slate-900 dark:text-white">
+                              <div className="font-medium">
+                                <UserName userId={activity.actor} />                                 
+                                {` ` +formatActivityMessage(activity)}
+                              </div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400">
+                                {new Date(activity.created_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          No activity recorded for this task.
+                        </p>
                       )}
                     </CardContent>
                   </Card>

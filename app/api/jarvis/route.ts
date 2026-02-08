@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       reply: result.reply,
-      conversation: result.conversation
+      conversation: result.conversation,
+      taskCreated: result.taskCreated, // Include task creation info if any
+      needsWorkspaceSelection: result.needsWorkspaceSelection // Flag if user needs to select workspace
     })
   } catch (error) {
     console.error('Error in Jarvis API:', error)

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get list members (simple query to avoid foreign key issues)
     const { data: members, error } = await supabase
       .from('list_members')
-      .select('list_id, user_id, role, added_at, created_at, updated_at')
+      .select('list_id, user_id, role, created_at, updated_at')
       .eq('list_id', resolvedParams.id)
 
     if (error) {

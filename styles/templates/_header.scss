@@ -1,0 +1,19 @@
+/**
+* Header styles
+* This file contains styles specific to the header component.
+*/
+.header-main{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: calc(100% - 20px);
+    margin: 10px;
+
+    border-radius: 12px;
+
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}

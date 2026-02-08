@@ -9,6 +9,9 @@ export interface Profile {
   avatar_url: string | null
   created_at: string
   updated_at: string
+  onboarding_completed?: boolean
+  onboarding_stage?: number
+  onboarding_completed_at?: string | null
 }
 
 // Extended user with profile information

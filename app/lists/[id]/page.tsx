@@ -297,9 +297,9 @@ export default function ListDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
         </div>
       </div>
     )
@@ -312,12 +312,12 @@ export default function ListDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <div className="container mx-auto p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-300 rounded w-1/4"></div>
-            <div className="h-32 bg-gray-300 rounded"></div>
-            <div className="h-32 bg-gray-300 rounded"></div>
+            <div className="h-8 bg-purple-200 dark:bg-purple-900 rounded w-1/4"></div>
+            <div className="h-32 bg-purple-100 dark:bg-purple-950 rounded"></div>
+            <div className="h-32 bg-purple-100 dark:bg-purple-950 rounded"></div>
           </div>
         </div>
       </div>
@@ -326,7 +326,7 @@ export default function ListDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <div className="container mx-auto p-6">
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
@@ -343,7 +343,7 @@ export default function ListDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="flex h-screen overflow-hidden">
         {/* Main Content */}
         <div className={`flex-1 ${isTaskSidePanelOpen ? 'mr-96' : ''} transition-all duration-300`}>

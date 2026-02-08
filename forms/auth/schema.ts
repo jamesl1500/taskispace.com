@@ -15,7 +15,6 @@ import * as z from 'zod'
  * This schema is used to validate the signup form inputs.
  * Fields:
  * - full_name: Required, 2-100 characters
- * - user_name: Required, 3-30 characters, alphanumeric with hyphens/underscores
  * - email: Required, valid email format
  * - password: Required, 8-100 characters, must include uppercase, lowercase, number, and special character
  * - confirm_password: Must match the password field
@@ -24,10 +23,6 @@ import * as z from 'zod'
  */
 export const signupFormSchema = z.object({
     full_name: z.string().min(2, 'Full name must be at least 2 characters long').max(100, 'Full name must be at most 100 characters long'),
-    user_name: z.string()
-        .min(3, 'Username must be at least 3 characters long')
-        .max(30, 'Username must be at most 30 characters long')
-        .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, hyphens, and underscores'),
     email: z.string().email('Invalid email address'),
     password: z.string()
         .min(8, 'Password must be at least 8 characters long')

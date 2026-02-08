@@ -71,6 +71,12 @@ export function JarvisChat() {
         setSelectedConversationId(result.conversation.id)
         refetchConversations()
       }
+
+      // Show task creation success notification
+      if (result.taskCreated) {
+        // Task was created successfully - the AI response will confirm this
+        console.log('Task created:', result.taskCreated)
+      }
     } catch (error) {
       console.error('Failed to send message:', error)
     }
@@ -188,7 +194,7 @@ export function JarvisChat() {
           </Button>
         </div>
 
-        <ScrollArea className="flex-1 p-2">
+        <ScrollArea className="flex-1 p-4">
           {conversationsLoading ? (
             <div className="flex items-center justify-center p-8">
               <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
@@ -209,7 +215,7 @@ export function JarvisChat() {
                   }`}
                   onClick={() => setSelectedConversationId(conv.id)}
                 >
-                  <CardContent className="p-3">
+                  <CardContent>
                     {editingId === conv.id ? (
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                         <input
@@ -334,12 +340,12 @@ export function JarvisChat() {
                 Your intelligent assistant for task management and productivity. Start a new conversation or select an existing one.
               </p>
               <div className="space-y-2 text-sm text-left bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
-                <p className="font-medium">💡 Tips:</p>
+                <p className="font-medium">💡 What I can do:</p>
                 <ul className="space-y-1 text-slate-600 dark:text-slate-400 ml-4">
-                  <li>• Ask about your tasks and deadlines</li>
-                  <li>• Get help prioritizing work</li>
-                  <li>• Request productivity advice</li>
-                  <li>• Conversations are saved automatically</li>
+                  <li>• <strong>Create tasks:</strong> &quot;Create a task to review the budget&quot;</li>
+                  <li>• <strong>Get help:</strong> Ask about your tasks and deadlines</li>
+                  <li>• <strong>Prioritize:</strong> Get advice on what to work on</li>
+                  <li>• <strong>Save automatically:</strong> All conversations are saved</li>
                 </ul>
               </div>
             </div>

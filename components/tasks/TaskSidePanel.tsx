@@ -103,7 +103,7 @@ export default function TaskSidePanel({
       {/* Side Panel */}
       <div className="fixed right-0 top-0 h-screen w-[600px] bg-white border-l border-gray-200 shadow-lg z-50 flex flex-col">
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-gray-200 p-6">
+        <div className="flex-shrink-0 border-b border-gray-200 p-6 pt-20">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1 min-w-0 mr-4">
               <h2 className="text-xl font-bold text-gray-900 mb-2 break-words">

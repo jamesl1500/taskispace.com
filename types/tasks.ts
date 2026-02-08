@@ -60,7 +60,7 @@ export interface TaskCollaborator {
   user_id: string
   role: TaskCollaboratorRole
   added_by: string
-  added_at: string
+  created_at: string
 }
 
 export interface TaskCollaboratorWithTask extends TaskCollaborator {

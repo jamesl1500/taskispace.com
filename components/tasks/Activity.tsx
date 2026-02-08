@@ -201,7 +201,7 @@ export default function Activity({ taskId }: ActivityProps) {
         ) : (
           activities.map((activity: TaskActivity) => (
             <Card key={activity.id} className="border-l-4 border-l-gray-200">
-              <CardContent className="p-4">
+              <CardContent className="p-4 pt-0 pb-0">
                 <div className="flex gap-3">
                   {/* Activity Icon */}
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${getActivityColor(activity.type)}`}>
@@ -222,7 +222,7 @@ export default function Activity({ taskId }: ActivityProps) {
                         </div>
                         
                         {hasDescription(activity.payload) && (
-                          <p className="text-sm text-gray-600 mt-2 ml-8">
+                          <p className="text-sm text-gray-600 mt-4 ml-8">
                             {activity.payload.description}
                           </p>
                         )}

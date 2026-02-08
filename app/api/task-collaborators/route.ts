@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       .from('task_collaborators')
       .select('*')
       .eq('task_id', task_id)
-      .order('added_at', { ascending: true })
+      .order('created_at', { ascending: true })
 
     if (error) {
       console.error('Database error:', error)

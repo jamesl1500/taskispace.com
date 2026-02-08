@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { TaskService } from '@/lib/services/task-service'
 
 interface RouteParams {
   params: Promise<{
@@ -29,6 +30,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
       return NextResponse.json({ error: 'Failed to fetch task' }, { status: 500 })
     }
+
+    // Add task comments, activity, and todo data
+    const taskService = new TaskService();
+
+    const [comments, activities, todos] = await Promise.all([
+      taskService.getTaskCommentsByTaskId(resolvedParams.id),
+      taskService.getTaskActivitiesByTaskId(resolvedParams.id),
+      taskService.getTodosByTask(resolvedParams.id)
+    ]);
+
+    task.comments = comments;
+    task.activities = activities;
+    task.todos = todos;
 
     let listData = null
     let workspaceData = null

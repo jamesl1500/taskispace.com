@@ -281,7 +281,7 @@ export default function CreateWorkspacePage() {
 
         {/* Tips Card */}
         <Card className="mt-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-          <CardContent className="pt-6">
+          <CardContent className="pt-0">
             <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
               💡 Workspace Tips
             </h3>
